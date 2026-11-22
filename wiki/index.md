@@ -109,7 +109,7 @@ The goal of this firmware is to constantly push the bounds of what is possible w
 
 <sup id="fn2">2. OFW needs manual setup for FindMy Flipper; Custom Firmwares enable it automatically at startup.</sup>
 
-<sup id="fn3">3. These Firmwares add extra Bad KB options in Bad USB, as proposed to OFW in PR <a href="https://github.com/flipperdevices/flipperzero-firmware/pull/4136" target="_blank" rel="noopener noreferrer">4136</a>.</sup>
+<sup id="fn3">3. These firmwares add extra Bad KB options in Bad USB. OFW merged them on its dev branch in PR <a href="https://github.com/flipperdevices/flipperzero-firmware/pull/4136" target="_blank" rel="noopener noreferrer">4136</a>, but they are not in an official release yet.</sup>
 
 <sup id="fn4">4. Partional functionality, less options in the "CFW Settings" management app.</sup>
 
