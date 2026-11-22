@@ -85,7 +85,7 @@ Momentum-dx is an unofficial fork. It is not affiliated with Next-Flip or the Mo
 
 <sup id="fn2">2. Official Firmware needs manual setup for FindMy Flipper; Custom Firmwares enable it automatically at startup.</sup>
 
-<sup id="fn3">3. These Firmwares add extra Bad KB options in Bad USB, as proposed to Official Firmware in PR <a href="https://github.com/flipperdevices/flipperzero-firmware/pull/4136" target="_blank" rel="noopener noreferrer">4136</a>.</sup>
+<sup id="fn3">3. These firmwares add extra Bad KB options in Bad USB. Official Firmware merged them on its dev branch in PR <a href="https://github.com/flipperdevices/flipperzero-firmware/pull/4136" target="_blank" rel="noopener noreferrer">4136</a>, but they are not in an official release yet.</sup>
 
 <sup id="fn4">4. Partional functionality, less options in the "CFW Settings" management app.</sup>
 
