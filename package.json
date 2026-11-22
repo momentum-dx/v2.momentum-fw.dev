@@ -4,7 +4,7 @@
     "description": "Web updater, asset pack browser and wiki for momentum-dx.project516.dev",
     "author": "Next-Flip and Momentum-dx contributors",
     "license": "GPL-3.0",
-    "homepage": "https://github.com/momentum-dx/v2.momentum-fw.dev",
+    "homepage": "https://github.com/momentum-dx/website",
     "private": true,
     "type": "module",
     "scripts": {

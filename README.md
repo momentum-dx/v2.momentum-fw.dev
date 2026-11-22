@@ -1,4 +1,4 @@
-# v2.momentum-fw.dev
+# Momentum-dx website
 
 Source of the Momentum-dx website at <https://momentum-dx.project516.dev>. Momentum-dx is a bleeding-edge fork of Momentum Firmware for the Flipper Zero. The site is an unofficial fork of the Momentum website, built with VitePress and Vue 3. It has the web updater, release pages, asset packs and the wiki.
 
