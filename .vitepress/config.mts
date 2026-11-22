@@ -115,7 +115,8 @@ export default defineConfig({
         /* LOCALE_CONFIGS_END */
     } as Parameters<typeof defineConfig>[0]["locales"],
     head: [
-        ["link", { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }],
+        ["link", { rel: "icon", href: "/favicon.png", type: "image/png" }],
+        ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }],
         [
             "meta",
             { name: "theme-color", media: "(prefers-color-scheme: light)", content: "#ffffff" },
@@ -252,6 +253,7 @@ export default defineConfig({
     cleanUrls: true,
     lastUpdated: true,
     themeConfig: {
+        logo: "/logos/mdx.png",
         outline: "deep",
         socialLinks: [
             { icon: "github", link: `https://github.com/${FIRMWARE_REPO}` },
