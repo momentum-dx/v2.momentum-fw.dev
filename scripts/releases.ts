@@ -1,574 +1,180 @@
-import { parse } from "node-html-parser";
+import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ofetch } from "ofetch";
-import { join } from "path";
-import { DIR_DATA, getPrNumber, HEADER, jsonToTypeScript, replacePrNumber } from "./utils";
+import {
+    FIRMWARE_FILES_URL,
+    FIRMWARE_REPO,
+    MAX_RELEASES,
+    RELEASE_TAG_PREFIX,
+} from "../.vitepress/site";
+import { DIR_DATA, HEADER, jsonToTypeScript } from "./utils";
 
-interface FirmwareFile {
+interface GithubAsset {
+    name: string;
+    size: number;
+    browser_download_url: string;
+}
+
+interface GithubRelease {
+    tag_name: string;
+    draft: boolean;
+    prerelease: boolean;
+    published_at: string;
+    body: string | null;
+    assets: GithubAsset[];
+}
+
+interface DirectoryFile {
     url: string;
     target: string;
     type: string;
     sha256: string;
 }
 
-interface DevbuildFile {
-    filename: string;
-    size: string;
-}
-
-export interface ReleaseItem {
-    version: string;
-    branch?: string;
-    date?: string;
-    description?: string;
-    commit?: string;
-    pr?: string;
-    timestamp?: number;
-    changelog?: string;
-    files?: FirmwareFile[] | DevbuildFile[] | MainlineFile[];
-}
-
-interface MainlineFile {
+interface ReleaseFile {
     filename: string;
     size: string;
     url: string;
 }
 
-interface MainlineRelease {
+interface ReleaseItem {
     version: string;
     date: string;
     timestamp: number;
-    files: MainlineFile[];
+    changelog: string;
+    files: ReleaseFile[];
 }
 
-interface FirmwareChannel {
-    id: string;
-    title: string;
-    description: string;
-    versions: ReleaseItem[];
-}
+const PUBLIC_DIR = resolve(DIR_DATA, "../public");
+const BUILDS_DIR = join(PUBLIC_DIR, "builds/firmware");
+const FIRMWARE_DIR = join(PUBLIC_DIR, "firmware");
+const MAX_ARTIFACT_BYTES = 800 * 1024 * 1024;
+const FILE_NAME = /^flipper-z-(\w+)-(\w+)-dx-[\w.-]+\.(\w+)$/;
+const USER_AGENT = "Momentum-dx-Website";
 
-interface FirmwareDirectory {
-    channels: FirmwareChannel[];
-}
-
-function parseDateString(dateStr: string): number {
-    const months: Record<string, number> = {
-        Jan: 0,
-        Feb: 1,
-        Mar: 2,
-        Apr: 3,
-        May: 4,
-        Jun: 5,
-        Jul: 6,
-        Aug: 7,
-        Sep: 8,
-        Oct: 9,
-        Nov: 10,
-        Dec: 11,
-    };
-
-    const parts = dateStr.split(/[\s-:]/);
-    if (parts.length >= 4) {
-        const year = parseInt(parts[0]);
-        const month = months[parts[1]];
-        const day = parseInt(parts[2]);
-        const hour = parseInt(parts[3]) || 0;
-        const minute = parseInt(parts[4]) || 0;
-
-        return Date.UTC(year, month, day, hour, minute) / 1000;
+async function fetchGithubReleases(): Promise<GithubRelease[]> {
+    const fixture = process.env.RELEASES_FIXTURE;
+    if (fixture) {
+        console.log(`  Reading releases from fixture ${fixture}`);
+        return JSON.parse(await fs.readFile(fixture, "utf8"));
     }
-    return 0;
-}
 
-async function fetchFirmwareDirectory(): Promise<FirmwareDirectory> {
-    try {
-        const data: FirmwareDirectory = await ofetch(
-            "https://up.momentum-fw.dev/firmware/directory.json",
-            {
-                timeout: 15000,
-                headers: {
-                    "User-Agent": "Momentum-Firmware-Website",
-                },
-            },
-        );
-
-        if (!data || !data.channels || !Array.isArray(data.channels)) {
-            throw new Error("❌ Invalid firmware directory structure received");
-        }
-
-        console.log(
-            `  Successfully fetched firmware directory with ${data.channels.length} channels`,
-        );
-        return data;
-    } catch (error) {
-        console.error("❌  Failed to fetch firmware directory:", error);
-        throw error;
-    }
-}
-
-async function fetchChangelogForVersion(version: string): Promise<string> {
-    console.log(`  Fetching changelog for ${version}...`);
-
-    try {
-        const localChangelogVersions = ["mntm-004", "mntm-003", "mntm-002", "mntm-001"];
-        if (localChangelogVersions.includes(version)) {
-            try {
-                const changelogPath = join(DIR_DATA, `changelogs/${version}.txt`);
-                const changelog = await fs.readFile(changelogPath, "utf8");
-                console.log(
-                    `  Successfully loaded local changelog for ${version} (${changelog.length} characters)`,
-                );
-                return changelog.replace(/\r/g, "");
-            } catch (error) {
-                console.warn(`⁉️  Failed to load local changelog for ${version}:`, error);
-                return "";
-            }
-        }
-
-        const isMainlineVersion = version.startsWith("mntm-");
-        const url = isMainlineVersion
-            ? `https://raw.githubusercontent.com/Next-Flip/Momentum-Firmware/refs/tags/${version}/CHANGELOG.md`
-            : `https://raw.githubusercontent.com/Next-Flip/Momentum-Firmware/${version}/CHANGELOG.md`;
-        const changelog: string = await ofetch(url, {
-            parseResponse: (txt) => txt,
-            timeout: 10000,
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const releases = await ofetch<GithubRelease[]>(
+        `https://api.github.com/repos/${FIRMWARE_REPO}/releases`,
+        {
+            query: { per_page: 100 },
+            timeout: 20000,
             headers: {
-                "User-Agent": "Momentum-Firmware-Website",
+                "User-Agent": USER_AGENT,
+                Accept: "application/vnd.github+json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
-        });
-
-        if (!changelog || typeof changelog !== "string") {
-            console.warn(`⁉️  Empty or invalid changelog received for ${version}`);
-            return "";
-        }
-
-        console.log(
-            `  Successfully fetched changelog for ${version} (${changelog.length} characters)`,
-        );
-        return changelog.replace(/\n/g, "\n").replace(/\r/g, "");
-    } catch (error) {
-        console.warn(`⁉️  Failed to fetch changelog for ${version}:`, error);
-        return "";
+        },
+    );
+    if (!Array.isArray(releases)) {
+        throw new Error("Invalid releases response from GitHub");
     }
+    return releases;
 }
 
-async function parseMainFirmwareBuildsHTML(): Promise<{
-    mainlineVersions: string[];
-    hasDevBuilds: boolean;
-}> {
-    console.log("  Parsing main firmware builds...");
+export function selectReleases(releases: GithubRelease[]): GithubRelease[] {
+    return releases
+        .filter((r) => !r.draft && !r.prerelease && r.tag_name.startsWith(RELEASE_TAG_PREFIX))
+        .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))
+        .slice(0, MAX_RELEASES);
+}
 
-    try {
-        let html: string;
+async function readAsset(asset: GithubAsset, dest: string): Promise<Buffer> {
+    const cached = await fs.readFile(dest).catch(() => null);
+    if (cached && cached.length === asset.size) return cached;
 
-        try {
-            console.log("    Fetching main firmware builds from remote URL...");
-            html = await ofetch("https://up.momentum-fw.dev/builds/firmware/", {
-                parseResponse: (txt) => txt,
-                timeout: 15000,
-                headers: {
-                    "User-Agent": "Momentum-Firmware-Website",
-                },
-            });
-            console.log("    Successfully fetched main firmware builds HTML");
-        } catch (error) {
-            console.error("❌  Failed to fetch main firmware builds HTML:", error);
-            throw error;
+    const url = asset.browser_download_url;
+    if (url.startsWith("file://")) return fs.readFile(fileURLToPath(url));
+
+    const bytes = await ofetch<ArrayBuffer>(url, {
+        responseType: "arrayBuffer",
+        timeout: 120000,
+        retry: 2,
+        headers: { "User-Agent": USER_AGENT },
+    });
+    return Buffer.from(bytes);
+}
+
+function formatSize(bytes: number): string {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+async function importRelease(
+    release: GithubRelease,
+    totalBytes: { value: number },
+): Promise<{ item: ReleaseItem; files: DirectoryFile[] }> {
+    const tag = release.tag_name;
+    const dir = join(BUILDS_DIR, tag);
+    await fs.mkdir(dir, { recursive: true });
+
+    const item: ReleaseItem = {
+        version: tag,
+        date: new Date(release.published_at).toISOString().split("T")[0],
+        timestamp: Math.floor(Date.parse(release.published_at) / 1000),
+        changelog: (release.body || "").replace(/\r/g, "").trim(),
+        files: [],
+    };
+    const files: DirectoryFile[] = [];
+
+    for (const asset of release.assets) {
+        const match = asset.name.match(FILE_NAME);
+        if (!match || !asset.name.includes(`-${tag}.`)) continue;
+
+        const data = await readAsset(asset, join(dir, asset.name));
+        totalBytes.value += data.length;
+        if (totalBytes.value > MAX_ARTIFACT_BYTES) {
+            throw new Error(`Firmware files exceed ${MAX_ARTIFACT_BYTES} bytes`);
         }
+        await fs.writeFile(join(dir, asset.name), data);
 
-        if (!html || typeof html !== "string") {
-            throw new Error("❌ Invalid HTML content received");
-        }
-
-        const root = parse(html);
-        const tbody = root.querySelector("#list tbody");
-
-        if (!tbody) {
-            throw new Error("❌ Could not find table body in HTML");
-        }
-
-        const mainlineVersions: string[] = [];
-        let hasDevBuilds = false;
-        const rows = tbody.querySelectorAll("tr");
-
-        console.log(`    Processing ${rows.length} rows from main firmware builds table...`);
-
-        rows.forEach((row) => {
-            const linkCell = row.querySelector("td.link");
-            if (!linkCell) return;
-
-            const link = linkCell.querySelector("a");
-            if (!link) return;
-
-            const href = link.getAttribute("href");
-            if (!href || href === "../") return;
-
-            if (href === "dev/") {
-                hasDevBuilds = true;
-            } else if (href.startsWith("mntm-") && href.endsWith("/")) {
-                const version = href.slice(0, -1);
-                mainlineVersions.push(version);
-            }
+        const url = `${FIRMWARE_FILES_URL}/${tag}/${asset.name}`;
+        item.files.push({ filename: asset.name, size: formatSize(data.length), url });
+        files.push({
+            url,
+            target: match[1],
+            type: `${match[2]}_${match[3]}`,
+            sha256: createHash("sha256").update(data).digest("hex"),
         });
-
-        mainlineVersions.sort((a, b) => {
-            const aNum = parseInt(a.replace("mntm-", ""));
-            const bNum = parseInt(b.replace("mntm-", ""));
-            return bNum - aNum;
-        });
-
-        console.log(
-            `    Found ${mainlineVersions.length} mainline versions: ${mainlineVersions.join(", ")}`,
-        );
-        console.log(`    Dev builds available: ${hasDevBuilds}`);
-
-        return { mainlineVersions, hasDevBuilds };
-    } catch (error) {
-        console.error("❌  Failed to parse main firmware builds HTML:", error);
-        throw error;
     }
+
+    console.log(`  ${tag}: ${item.files.length} files`);
+    return { item, files };
 }
 
-async function parseMainlineReleaseHTML(version: string): Promise<MainlineRelease> {
-    console.log(`  Parsing mainline release ${version}...`);
-
-    try {
-        let html: string;
-
-        try {
-            const url = `https://up.momentum-fw.dev/builds/firmware/${version}/`;
-            html = await ofetch(url, {
-                parseResponse: (txt) => txt,
-                timeout: 15000,
-                headers: {
-                    "User-Agent": "Momentum-Firmware-Website",
-                },
-            });
-            console.log(`    Successfully fetched ${version} HTML`);
-        } catch (error) {
-            console.error(`❌  Failed to fetch ${version} HTML:`, error);
-            throw error;
-        }
-
-        if (!html || typeof html !== "string") {
-            throw new Error("❌ Invalid HTML content received");
-        }
-
-        const root = parse(html);
-        const tbody = root.querySelector("#list tbody");
-
-        if (!tbody) {
-            throw new Error("❌ Could not find table body in HTML");
-        }
-
-        const files: MainlineFile[] = [];
-        const rows = tbody.querySelectorAll("tr");
-        let releaseDate = "";
-        let timestamp = 0;
-
-        console.log(`    Processing ${rows.length} rows from ${version} table...`);
-
-        rows.forEach((row) => {
-            const linkCell = row.querySelector("td.link");
-            const sizeCell = row.querySelector("td.size");
-            const dateCell = row.querySelector("td.date");
-
-            if (!linkCell || !sizeCell || !dateCell) return;
-            const link = linkCell.querySelector("a");
-            if (!link) return;
-
-            const href = link.getAttribute("href");
-            const filename = link.text?.trim();
-            const size = sizeCell.text?.trim();
-            const date = dateCell.text?.trim();
-
-            if (!href || !filename || href === "../" || !filename.includes(version)) {
-                return;
-            }
-
-            if (!releaseDate && date) {
-                releaseDate = date;
-                timestamp = parseDateString(date);
-            }
-
-            files.push({
-                filename,
-                size: size || "",
-                url: `https://up.momentum-fw.dev/builds/firmware/${version}/${filename}`,
-            });
-        });
-
-        const isoDate = timestamp > 0 ? new Date(timestamp * 1000).toISOString().split("T")[0] : "";
-
-        console.log(`    Found ${files.length} files for ${version}, date: ${isoDate}`);
-
-        return {
-            version,
-            date: isoDate,
-            timestamp,
-            files,
-        };
-    } catch (error) {
-        console.error(`❌  Failed to parse ${version} HTML:`, error);
-        throw error;
-    }
+export function buildDirectory(latest: ReleaseItem | undefined, files: DirectoryFile[]) {
+    return {
+        channels: [
+            {
+                id: "release",
+                title: "Stable Release Channel",
+                description: "Less frequent, more stable releases",
+                versions: latest
+                    ? [
+                          {
+                              version: latest.version,
+                              changelog: latest.changelog,
+                              timestamp: latest.timestamp,
+                              files,
+                          },
+                      ]
+                    : [],
+            },
+        ],
+    };
 }
 
-async function parseDevbuildsHTML(): Promise<{
-    commitGroups: Record<string, DevbuildFile[]>;
-    commitTimestamps: Record<string, number>;
-}> {
-    console.log("  Parsing devbuilds...");
+async function writeReleasesData(releases: ReleaseItem[]): Promise<void> {
+    const content = `${HEADER}
 
-    try {
-        let html: string;
-
-        try {
-            console.log("    Fetching firmware builds from remote URL...");
-            html = await ofetch("https://up.momentum-fw.dev/builds/firmware/dev/", {
-                parseResponse: (txt) => txt,
-                timeout: 15000,
-                headers: {
-                    "User-Agent": "Momentum-Firmware-Website",
-                },
-            });
-            console.log("    Successfully fetched firmware builds HTML");
-        } catch (error) {
-            console.error("❌  Failed to fetch firmware builds HTML:", error);
-            throw error;
-        }
-
-        if (!html || typeof html !== "string") {
-            throw new Error("❌ Invalid HTML content received");
-        }
-
-        const root = parse(html);
-        const tbody = root.querySelector("#list tbody");
-
-        if (!tbody) {
-            throw new Error("❌ Could not find table body in HTML");
-        }
-
-        const files: (DevbuildFile & { commit: string; date: string })[] = [];
-        const rows = tbody.querySelectorAll("tr");
-
-        console.log(`    Processing ${rows.length} rows from devbuilds table...`);
-
-        rows.forEach((row) => {
-            const linkCell = row.querySelector("td.link");
-            const sizeCell = row.querySelector("td.size");
-            const dateCell = row.querySelector("td.date");
-
-            if (!linkCell || !sizeCell || !dateCell) return;
-            const link = linkCell.querySelector("a");
-            if (!link) return;
-
-            const href = link.getAttribute("href");
-            const filename = link.text?.trim();
-            const size = sizeCell.text?.trim();
-            const date = dateCell.text?.trim();
-
-            if (!href || !filename || href === "../" || !filename.includes("mntm-dev-")) {
-                return;
-            }
-
-            const commitMatch = filename.match(/mntm-dev-([a-f0-9]+)\./);
-            if (!commitMatch) return;
-            const commit = commitMatch[1];
-
-            files.push({
-                filename,
-                size: size || "",
-                commit,
-                date: date || "",
-            });
-        });
-
-        const commitGroups: Record<string, DevbuildFile[]> = {};
-        const commitTimestamps: Record<string, number> = {};
-
-        files.forEach((file) => {
-            if (!commitGroups[file.commit]) {
-                commitGroups[file.commit] = [];
-                const date = parseDateString(file.date);
-                commitTimestamps[file.commit] = date;
-            }
-            commitGroups[file.commit].push({
-                filename: file.filename,
-                size: file.size,
-            });
-        });
-
-        console.log(`    Found ${Object.keys(commitGroups).length} unique commits`);
-
-        return { commitGroups, commitTimestamps };
-    } catch (error) {
-        console.error("❌  Failed to parse devbuilds HTML:", error);
-        throw error;
-    }
-}
-
-export async function getReleaseAndDevbuilds() {
-    try {
-        const { mainlineVersions, hasDevBuilds } = await parseMainFirmwareBuildsHTML();
-
-        if (mainlineVersions.length === 0) {
-            throw new Error("❌ No mainline versions found");
-        }
-
-        const mainlineReleases: MainlineRelease[] = [];
-        for (const version of mainlineVersions) {
-            try {
-                const release = await parseMainlineReleaseHTML(version);
-                mainlineReleases.push(release);
-            } catch (error) {
-                console.warn(`⁉️  Failed to parse ${version}, skipping:`, error);
-            }
-        }
-
-        console.log(`  Successfully processed ${mainlineReleases.length} mainline releases`);
-
-        const devbuildItems: ReleaseItem[] = [];
-        const seenVersions = new Set<string>();
-
-        if (hasDevBuilds) {
-            const { commitGroups, commitTimestamps } = await parseDevbuildsHTML();
-
-            if (commitGroups && Object.keys(commitGroups).length > 0) {
-                const validCommits = Object.entries(commitGroups)
-                    .filter(([_commit, files]) => files.length === 6)
-                    .sort(([a], [b]) => commitTimestamps[b] - commitTimestamps[a]);
-
-                console.log(
-                    `  Found ${validCommits.length} valid devbuild commits (filtered from ${Object.keys(commitGroups).length} total)`,
-                );
-
-                for (const [commit, groupFiles] of validCommits) {
-                    if (seenVersions.has(commit)) {
-                        console.log(`  Skipping duplicate devbuild version ${commit}`);
-                        continue;
-                    }
-                    seenVersions.add(commit);
-
-                    const timestamp = commitTimestamps[commit];
-                    const isoDate = new Date(timestamp * 1000).toISOString().split("T")[0];
-                    const changelog = await fetchChangelogForVersion(commit);
-
-                    devbuildItems.push({
-                        version: commit,
-                        branch: "mntm-dev",
-                        date: isoDate,
-                        commit: commit,
-                        timestamp: timestamp,
-                        changelog: changelog,
-                        files: groupFiles,
-                    });
-                }
-
-                console.log(`  Successfully processed ${devbuildItems.length} devbuilds`);
-            }
-        }
-
-        const mainlineItems: ReleaseItem[] = [];
-        for (const release of mainlineReleases) {
-            const changelog = await fetchChangelogForVersion(release.version);
-
-            if (!seenVersions.has(release.version)) {
-                seenVersions.add(release.version);
-
-                mainlineItems.push({
-                    version: release.version,
-                    branch: release.version,
-                    date: release.date,
-                    timestamp: release.timestamp,
-                    changelog: changelog,
-                    files: release.files,
-                });
-            } else {
-                console.log(`  Skipping duplicate mainline version ${release.version}`);
-            }
-        }
-
-        return {
-            mainlineItems,
-            devbuildItems,
-        };
-    } catch (error) {
-        console.error("❌ Failed to get release and devbuilds data:", error);
-        throw error;
-    }
-}
-
-async function getExtraBranches(
-    excludeBranches?: string[],
-): Promise<{ branchItems: ReleaseItem[] }> {
-    try {
-        const directory = await fetchFirmwareDirectory();
-        const branches = directory.channels.filter(
-            (branch) => !excludeBranches?.includes(branch.id),
-        );
-
-        const branchItems: ReleaseItem[] = [];
-        for (const branch of branches) {
-            const branchItem: ReleaseItem = {
-                // NOTE: yes these are backwards, makes things simpler in the updater controls
-                version: replacePrNumber(branch.id),
-                branch: branch.versions[0].version,
-                description: branch.description,
-                pr: getPrNumber(branch.id),
-                timestamp: branch.versions[0].timestamp,
-                changelog: branch.versions[0].changelog,
-                files: branch.versions[0].files,
-            };
-            branchItems.push(branchItem);
-        }
-        branchItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-        console.log(
-            `  Found ${branchItems.length} extra branches: ${branchItems.map((item) => item.version).join(", ")}`,
-        );
-
-        return { branchItems };
-    } catch (error) {
-        console.error("❌ Failed to get extra branches:", error);
-        throw error;
-    }
-}
-
-async function updateReleases(
-    mainlineItems: ReleaseItem[],
-    devbuildItems: ReleaseItem[],
-    branchItems: ReleaseItem[],
-): Promise<void> {
-    console.log("Updating releases...");
-
-    try {
-        if (!mainlineItems || mainlineItems.length === 0) {
-            throw new Error("❌ No mainline items provided for releases update");
-        }
-
-        console.log(
-            `  Processing ${mainlineItems.length} mainline items and ${devbuildItems.length} devbuild items`,
-        );
-
-        const releasesContent = `${HEADER}
-
-export type ReleaseChannel = "mainline" | "devbuild" | "branch";
-
-export interface FirmwareFile {
-    url: string;
-    target: string;
-    type: string;
-    sha256: string;
-}
-
-export interface DevbuildFile {
-    filename: string;
-    size: string;
-}
-
-export interface MainlineFile {
+export interface ReleaseFile {
     filename: string;
     size: string;
     url: string;
@@ -576,69 +182,52 @@ export interface MainlineFile {
 
 export interface ReleaseItem {
     version: string;
-    branch?: string;
-    date?: string;
-    description?: string;
-    commit?: string;
-    pr?: string;
-    timestamp?: number;
-    changelog?: string;
-    files?: FirmwareFile[] | DevbuildFile[] | MainlineFile[];
+    date: string;
+    timestamp: number;
+    changelog: string;
+    files: ReleaseFile[];
 }
 
-export const mainlineReleases: ReleaseItem[] = ${jsonToTypeScript(mainlineItems)};
+export const mainlineReleases: ReleaseItem[] = ${jsonToTypeScript(releases)};
 
-export const devbuildReleases: ReleaseItem[] = ${jsonToTypeScript(devbuildItems)};
-
-export const branchReleases: ReleaseItem[] = ${jsonToTypeScript(branchItems)};
-
-// Filter releases for navigation: only latest mainline + recent devbuilds
-export function getRecentReleases() {
-    const latestMainline = mainlineReleases.length > 0 ? mainlineReleases[0] : null;
-    const recentDevbuilds = devbuildReleases.slice(0, 4);
-
-    const recentMainlineItems = latestMainline ? [latestMainline] : [];
-
-    return {
-        mainline: recentMainlineItems,
-        devbuilds: recentDevbuilds,
-    };
-}
-
-export const recentReleases = getRecentReleases();
+export const recentReleases = { mainline: mainlineReleases };
 
 export const getReleaseByVersion = (version: string) => {
-    return [...mainlineReleases, ...devbuildReleases, ...branchReleases].find(
-        (release) => release.version === version,
-    );
+    return mainlineReleases.find((release) => release.version === version);
 };
 `;
-
-        const releasesPath = join(DIR_DATA, "./releases.ts");
-        await fs.writeFile(releasesPath, releasesContent, "utf8");
-        console.log("  Generated: _data/releases.ts");
-    } catch (error) {
-        console.error("❌ Failed to update releases data:", error);
-        throw error;
-    }
+    await fs.writeFile(join(DIR_DATA, "releases.ts"), content, "utf8");
+    console.log("  Generated: _data/releases.ts");
 }
 
 export async function fetchReleases() {
-    const { mainlineItems, devbuildItems } = await getReleaseAndDevbuilds();
+    const selected = selectReleases(await fetchGithubReleases());
+    console.log(`  Found ${selected.length} releases: ${selected.map((r) => r.tag_name).join(", ")}`);
 
-    if (!mainlineItems || !Array.isArray(mainlineItems) || mainlineItems.length === 0) {
-        throw new Error("❌ No mainline items received from getReleaseAndDevbuilds");
+    await fs.mkdir(BUILDS_DIR, { recursive: true });
+    for (const entry of await fs.readdir(BUILDS_DIR)) {
+        if (!selected.some((r) => r.tag_name === entry)) {
+            await fs.rm(join(BUILDS_DIR, entry), { recursive: true, force: true });
+        }
     }
-    if (!devbuildItems || !Array.isArray(devbuildItems)) {
-        throw new Error("❌ Invalid devbuild items received from getReleaseAndDevbuilds");
+
+    const totalBytes = { value: 0 };
+    const items: ReleaseItem[] = [];
+    let latestFiles: DirectoryFile[] = [];
+    for (const release of selected) {
+        const { item, files } = await importRelease(release, totalBytes);
+        if (items.length === 0) latestFiles = files;
+        items.push(item);
     }
 
-    console.log(`  Received ${mainlineItems.length} mainline releases`);
-    console.log(`  Received ${devbuildItems.length} devbuild items`);
+    await fs.mkdir(FIRMWARE_DIR, { recursive: true });
+    await fs.writeFile(
+        join(FIRMWARE_DIR, "directory.json"),
+        JSON.stringify(buildDirectory(items[0], latestFiles), null, 2) + "\n",
+    );
+    await fs.writeFile(join(FIRMWARE_DIR, "latest.txt"), items[0]?.version ?? "");
+    console.log(`  Wrote firmware/directory.json and latest.txt (${formatSize(totalBytes.value)})`);
 
-    const { branchItems } = await getExtraBranches(["development", "release"]);
-
-    await updateReleases(mainlineItems, devbuildItems, branchItems);
-
+    await writeReleasesData(items);
     console.log("Releases generated successfully");
 }

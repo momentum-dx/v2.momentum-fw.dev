@@ -13,10 +13,10 @@ head:
         content: "Security and display options for the lockscreen"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Interface/Lockscreen"
+        content: "https://momentum-dx.project516.dev/wiki/Interface/Lockscreen"
     - - meta
       - name: "twitter:title"
         content: "Lockscreen | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Security and display options for the lockscreen"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # Lockscreen

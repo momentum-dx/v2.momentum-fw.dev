@@ -2,14 +2,23 @@ import { promises as fs } from "fs";
 import type { MessageSchema, SupportedLocales } from "../.vitepress/i18n/index.ts";
 import messages from "../.vitepress/i18n/index.ts";
 import { formatDate } from "../.vitepress/theme/date.ts";
-import type { ReleaseItem } from "./releases.ts";
+import {
+    FIRMWARE_REPO,
+    MOMENTUM_URL,
+    SITE_URL,
+    WEBSITE_REPO,
+} from "../.vitepress/site.ts";
 import { HEADER, jsonToTypeScript, replaceTemplateSection } from "./utils.ts";
+
+interface NavRelease {
+    version: string;
+    date?: string;
+}
 
 function generateConfigContent(
     locale: string,
     m: MessageSchema,
-    mainlineItems: ReleaseItem[],
-    devbuildsItems: ReleaseItem[],
+    mainlineItems: NavRelease[],
 ): string {
     const isRoot = locale === "en";
     const langCode = isRoot ? "en-US" : locale;
@@ -17,11 +26,6 @@ function generateConfigContent(
     const searchConfigName = isRoot ? "rootSearchLocale" : `${locale}SearchLocale`;
 
     const navMainlineItems = mainlineItems.map((item) => ({
-        text: `${item.version} (${formatDate(item.date || new Date(), "short")})`,
-        link: `${isRoot ? "" : "/" + langCode}/update?version=${item.version}`,
-        activeMatch: `/update?version=${item.version}`,
-    }));
-    const navDevbuildsItems = devbuildsItems.slice(0, 1).map((item) => ({
         text: `${item.version} (${formatDate(item.date || new Date(), "short")})`,
         link: `${isRoot ? "" : "/" + langCode}/update?version=${item.version}`,
         activeMatch: `/update?version=${item.version}`,
@@ -84,11 +88,9 @@ function generateConfigContent(
 import { ${locale !== "en" ? "KeyOverrides, " : ""}generateSidebars } from "./sidebar";
 
 const editLinkPattern =
-    "https://github.com/Next-Flip/v2.momentum-fw.dev/:path";
+    "https://github.com/${WEBSITE_REPO}/:path";
 
 const MainlineItems = ${jsonToTypeScript(navMainlineItems)};
-
-const DevbuildsItems = ${jsonToTypeScript(navDevbuildsItems)};
 
 const InstallItems = [
     { text: "${m.nav_web_updater}", link: "${isRoot ? "/update" : `/${locale}/update`}" },
@@ -96,23 +98,20 @@ const InstallItems = [
         text: "${m.nav_releases}",
         link: "${isRoot ? "/releases/" : `/${locale}/releases/`}",
     },
-    { text: "${m.nav_recent}", items: [...MainlineItems, ...DevbuildsItems] },
+    { text: "${m.nav_recent}", items: MainlineItems },
 ];
 
 const SocialLinks = [
-    { text: "Github", link: "https://github.com/Next-Flip/Momentum-Firmware" },
-    { text: "Discord", link: "https://discord.gg/momentum" },
-    { text: "X/Twitter", link: "https://x.com/FlipperMomentum" },
-    { text: "Reddit", link: "https://www.reddit.com/r/flippermomentum/" },
+    { text: "Github", link: "https://github.com/${FIRMWARE_REPO}" },
+    { text: "Momentum (upstream)", link: "${MOMENTUM_URL}" },
 ];
 
 const ResourcesItems = [
     { items: SocialLinks },
     {
         text: "${m.nav_report_a_bug}",
-        link: "https://github.com/Next-Flip/Momentum-Firmware/issues",
+        link: "https://github.com/${FIRMWARE_REPO}/issues",
     },
-    { text: "${m.nav_donate}", link: "https://ko-fi.com/willyjl" },
 ];
 
 ${sidebarImport}${searchLocaleConfig}export const ${configName} = {
@@ -138,7 +137,7 @@ ${sidebarImport}${searchLocaleConfig}export const ${configName} = {
         ],
         sidebar: generateSidebars(${isRoot ? "undefined" : `"${locale}", ${locale}WikiTranslations`}),
         sitemap: {
-            hostname: 'https://momentum-fw.dev'
+            hostname: '${SITE_URL}'
         },
         editLink: {
             pattern: editLinkPattern,
@@ -175,12 +174,9 @@ export async function generateConfigs() {
         throw new Error("❌ No recentReleases found in releases module");
     }
 
-    const { mainline: navMainlineItems, devbuilds: navDevbuildItems } =
-        releasesModule.recentReleases;
+    const navMainlineItems = releasesModule.recentReleases.mainline;
 
-    console.log(
-        `  Using ${navMainlineItems.length} mainline and ${navDevbuildItems?.length || 0} devbuilds for navigation`,
-    );
+    console.log(`  Using ${navMainlineItems.length} releases for navigation`);
 
     for (const locale of locales) {
         console.log(`  Generating config for locale: ${locale}`);
@@ -194,7 +190,6 @@ export async function generateConfigs() {
                 locale,
                 messages[locale],
                 navMainlineItems,
-                navDevbuildItems || [],
             );
 
             if (!configContent || configContent.trim().length === 0) {

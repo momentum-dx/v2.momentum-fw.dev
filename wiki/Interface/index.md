@@ -13,10 +13,10 @@ head:
         content: "Customization of the interface (Desktop, Main Menu, Lockscreen, etc.)"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Interface"
+        content: "https://momentum-dx.project516.dev/wiki/Interface"
     - - meta
       - name: "twitter:title"
         content: "Interface | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Customization of the interface (Desktop, Main Menu, Lockscreen, etc.)"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 prev:
     text: "Community Asset Packs"
     link: "/wiki/Assets/Community-Asset-Packs"

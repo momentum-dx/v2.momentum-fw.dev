@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { devbuildReleases, mainlineReleases } from "../../../_data/releases";
+import { mainlineReleases } from "../../../_data/releases";
 import { useConnectionInfo, useDots, useThemeSwitcher } from "../composables";
 
 const { dots } = useDots();
@@ -35,38 +35,18 @@ const dynamicButtons = computed((): ActionButton[] => {
     }
 
     const currentVersion = deviceInfo.value?.firmware_version || "";
-    const currentCommit = deviceInfo.value?.firmware_commit || "";
-    const latestMainline = mainlineReleases.length > 0 ? mainlineReleases[0] : null;
-    const latestDevbuild = devbuildReleases.length > 0 ? devbuildReleases[0] : null;
-    const isMainlineVersion = currentVersion.match(/mntm-\d{3}/);
-    const isDevbuildVersion = currentVersion === "mntm-dev";
-    const isLatestMainline = latestMainline && currentVersion === latestMainline.version;
-    const isLatestDevbuild = latestDevbuild && currentCommit === latestDevbuild.version;
-    let updateText: string;
-    let updateHref: string;
-    let isLatest = false;
-
-    if (isMainlineVersion) {
-        if (isLatestMainline) {
-            updateText = tr("home_up_to_date");
-            updateHref = getLocalizedPath("/update");
-            isLatest = true;
-        } else {
-            updateText = `${tr("home_update_to")} ${latestMainline?.version}`;
-            updateHref = `${getLocalizedPath("/update")}?version=${latestMainline?.version || ""}`;
-        }
-    } else if (isDevbuildVersion) {
-        if (isLatestDevbuild) {
-            updateText = tr("home_latest_devbuild");
-            updateHref = getLocalizedPath("/update");
-            isLatest = true;
-        } else {
-            updateText = `${tr("home_update_to")} ${latestDevbuild?.version} (${tr("home_dev")})`;
-            updateHref = `${getLocalizedPath("/update")}?version=${latestDevbuild?.version || ""}`;
-        }
-    } else {
+    const latest = mainlineReleases[0];
+    if (!latest || !currentVersion.startsWith("dx-")) {
         return defaultButtons;
     }
+
+    const isLatest = currentVersion === latest.version;
+    const updateText = isLatest
+        ? tr("home_up_to_date")
+        : `${tr("home_update_to")} ${latest.version}`;
+    const updateHref = isLatest
+        ? getLocalizedPath("/update")
+        : `${getLocalizedPath("/update")}?version=${latest.version}`;
 
     const connectedButtons: ActionButton[] = [
         {

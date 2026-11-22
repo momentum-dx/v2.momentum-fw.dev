@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useWindowSize } from "@vueuse/core";
 import { computed } from "vue";
-import { devbuildReleases, mainlineReleases } from "../../../_data/releases";
+import { mainlineReleases } from "../../../_data/releases";
 
 import { useConnectionInfo, useReleaseNavigation } from "../composables";
 import ReleaseContent from "./ReleaseContent.vue";
@@ -24,15 +24,7 @@ const isCurrentVersion = computed(() => {
         return false;
     }
 
-    const release = selectedRelease.value;
-    const deviceVersion = deviceInfo.value.firmware_version || "";
-    const deviceCommit = deviceInfo.value.firmware_commit || "";
-
-    if (release.commit) {
-        return deviceVersion === "mntm-dev" && deviceCommit === release.version;
-    } else {
-        return deviceVersion === release.version;
-    }
+    return deviceInfo.value.firmware_version === selectedRelease.value.version;
 });
 </script>
 
@@ -51,7 +43,14 @@ const isCurrentVersion = computed(() => {
             </p>
         </div>
 
-        <div class="max-w-7xl mx-auto px-3.5 sm:px-6">
+        <p
+            v-if="mainlineReleases.length === 0"
+            class="text-center text-vp-2 text-base px-5 select-none"
+        >
+            {{ tr("releases_none") }}
+        </p>
+
+        <div v-else class="max-w-7xl mx-auto px-3.5 sm:px-6">
             <div class="flex flex-row justify-center">
                 <aside
                     class="hidden lg:block flex-shrink flex-grow-0 w-52 xl:w-60 pr-[20px] pt-5 pb-8"
@@ -60,14 +59,6 @@ const isCurrentVersion = computed(() => {
                         <ReleaseItems
                             :title="tr('releases_mainline')"
                             :releases="mainlineReleases"
-                            :selected-release="selectedRelease"
-                            :class="``"
-                            @select-release="selectRelease"
-                        />
-
-                        <ReleaseItems
-                            :title="tr('releases_devbuilds')"
-                            :releases="devbuildReleases"
                             :selected-release="selectedRelease"
                             @select-release="selectRelease"
                         />
@@ -80,7 +71,7 @@ const isCurrentVersion = computed(() => {
                     @select-release="selectRelease"
                 />
 
-                <ReleasesAside :selected-release="selectedRelease" />
+                <ReleasesAside />
             </div>
         </div>
     </div>

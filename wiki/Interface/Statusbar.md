@@ -13,10 +13,10 @@ head:
         content: "Customization of the statusbar (Desktop and Lockscreen)"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Interface/Statusbar"
+        content: "https://momentum-dx.project516.dev/wiki/Interface/Statusbar"
     - - meta
       - name: "twitter:title"
         content: "Statusbar | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Customization of the statusbar (Desktop and Lockscreen)"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # Statusbar

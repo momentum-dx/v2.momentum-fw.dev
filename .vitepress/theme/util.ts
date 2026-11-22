@@ -1,5 +1,6 @@
 import log from "loglevel";
-import type { ReleaseItem } from "scripts/releases.js";
+import type { ReleaseItem } from "../../_data/releases";
+import { FIRMWARE_REPO } from "../site";
 import messages, { SupportedLocales } from "../i18n/index.js";
 import { useI18n } from "./composables/useI18n";
 import type { LogoColor, RegionsData, ScreenColor } from "./types";
@@ -8,10 +9,7 @@ import pako from "pako";
 // @ts-expect-error - untar is a global library
 import { untar } from "./flipper/untar/untar.js";
 
-export const githubUrl = "https://github.com/Next-Flip/Momentum-Firmware";
-export const githubBranchUrl = (branch: string) => `${githubUrl}/tree/${branch}`;
-export const githubCommitUrl = (commit: string) => `${githubUrl}/commit/${commit}`;
-export const githubPullRequestUrl = (pullRequest: string) => `${githubUrl}/pull/${pullRequest}`;
+export const githubUrl = `https://github.com/${FIRMWARE_REPO}`;
 export const githubBlobUrl = (blob: string) => `${githubUrl}/blob/${blob}`;
 export const githubTagUrl = (tag: string) => `${githubUrl}/releases/tag/${tag}`;
 
@@ -122,40 +120,17 @@ export const getRadioStackType = (radioStackType: string | number | undefined) =
     }
 };
 
-export const replaceIssuesAndMentions = (text: string, isBranchRelease = false): string => {
-    const a = (href: string, className: string, content: string) =>
-        `<a href="${href}" target="_blank" rel="noopener noreferrer" class="${className} font-bold transition-colors duration-100 no-underline hover:underline">${content}</a>`;
-    const code = (content: string) => `<code class="font-mono text-yellow-950/90 dark:text-orange-300/90">${content}</code>`;
+export const replaceIssuesAndMentions = (text: string): string => {
+    const a = (href: string, content: string) =>
+        `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-vp-alternate-1 hover:text-vp-alternate-2 font-bold transition-colors duration-100 no-underline hover:underline">${content}</a>`;
 
-    let result = text;
-
-    if (isBranchRelease) {
-        result = result.replace(/\\n/g, '\n')
-            .replace(/(\[`[a-f0-9]{8}`\])/g, '\n$1')
-            .replace(/^\n+/, '')
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) =>
-                a(url, "hover:underline underline-offset-4 dark:decoration-orange-200/20 decoration-yellow-950/20 hover:decoration-yellow-950/50 hover:dark:decoration-orange-200/40 text-yellow-800/90 dark:text-orange-300/90 hover:text-yellow-700/90 hover:dark:text-yellow-100/90", text)
-            )
-            .replace(/`([^`]+)`/g, (_, c) => code(c));
-    }
-
-    result = result.replace(/(?<![a-zA-Z])@([a-zA-Z0-9_-]+)/g, (_, username) =>
-        a(
-            `https://github.com/${username}`,
-            "text-vp-brand-1 hover:text-vp-brand-2",
-            `@${username}`,
-        ),
-    );
-
-    result = result.replace(/#(\d+)/g, (_, issueNumber) =>
-        a(
-            `${githubUrl}/issues/${issueNumber}`,
-            isBranchRelease ? "text-vp-brand-1 hover:text-vp-brand-2" : "text-vp-alternate-1 hover:text-vp-alternate-2",
-            `#${issueNumber}`,
-        ),
-    );
-
-    return result;
+    return text
+        .replace(/(?<![a-zA-Z])@([a-zA-Z0-9_-]+)/g, (_, username) =>
+            a(`https://github.com/${username}`, `@${username}`),
+        )
+        .replace(/#(\d+)/g, (_, issueNumber) =>
+            a(`${githubUrl}/issues/${issueNumber}`, `#${issueNumber}`),
+        );
 };
 
 export const shortenTimeString = (timeString: string): string => {
@@ -277,17 +252,8 @@ export async function unpack(buffer: ArrayBuffer) {
 }
 
 export const parseUploadedFileName = (filename: string): string | null => {
-    const mntmMatch = filename.match(/(mntm-\d{3})/);
-    if (mntmMatch) {
-        return `${mntmMatch[1]}`;
-    }
-
-    const devMatch = filename.match(/mntm-dev-([a-f0-9]{8})/);
-    if (devMatch) {
-        return devMatch[1];
-    }
-
-    return null;
+    const match = filename.match(/(dx-\d{4}\.\d{2}\.\d{2}(?:-\d+)?)/);
+    return match ? match[1] : null;
 };
 
 export const getCurrentLocale = (): SupportedLocales => {
@@ -299,42 +265,10 @@ export const getCurrentLocale = (): SupportedLocales => {
 };
 
 export const getFirmwareDownloadUrl = (release: ReleaseItem): string | null => {
-    if (!release.files) return null;
-
-    for (const file of release.files) {
-        // Handle branch files (url, type)
-        if (
-            "url" in file &&
-            file.url &&
-            "type" in file &&
-            file.type === "update_tgz" &&
-            file.url.includes("update-mntm-") &&
-            file.url.endsWith(".tgz")
-        ) {
-            return file.url;
-        }
-
-        // Handle mainline/devbuild files (filename)
-        if (
-            "url" in file &&
-            file.url &&
-            "filename" in file &&
-            file.filename?.includes("update-mntm-") &&
-            file.filename?.endsWith(".tgz")
-        ) {
-            return file.url;
-        }
-
-        if (
-            "filename" in file &&
-            file.filename?.includes("update-mntm-") &&
-            file.filename.endsWith(".tgz")
-        ) {
-            return `https://up.momentum-fw.dev/builds/firmware/dev/${file.filename}`;
-        }
-    }
-
-    return null;
+    const file = release.files.find(
+        (f) => f.filename.startsWith("flipper-z-f7-update-") && f.filename.endsWith(".tgz"),
+    );
+    return file?.url ?? null;
 };
 
 interface ThemeConfig {

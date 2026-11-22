@@ -13,10 +13,10 @@ head:
         content: "Comprehensive guide to the features and settings specific to Momentum Firmware"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/"
+        content: "https://momentum-dx.project516.dev/wiki/"
     - - meta
       - name: "twitter:title"
         content: "Wiki | Momentum Firmware"
@@ -25,14 +25,11 @@ head:
         content: "Comprehensive guide to the features and settings specific to Momentum Firmware"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 next:
     text: Frequently Asked Questions
     link: /wiki/FAQ
 ---
-
-<img src="/banners/wiki_light.png" alt="banner" class="dark:hidden banner" />
-<img src="/banners/wiki_dark.png" alt="banner" class="hidden dark:block banner_dark" />
 
 <!-- TODO: Commented out because we don't need the translations for now -->
 <!-- <div class="mntm custom-block"> -->
@@ -46,7 +43,9 @@ next:
 
 <br/>
 
-# Momentum Firmware Wiki
+# Momentum-dx Wiki
+
+This guide comes from the Momentum wiki. Momentum-dx is a fork of Momentum, so the features and settings described here also apply to Momentum-dx.
 
 This is a comprehensive and explanatory guide to the features and settings specific to Momentum. Settings that are present in [OFW](https://github.com/flipperdevices/flipperzero-firmware) and remain _mostly_ the same may not be mentioned here. Refer to the [Comparison table](#compare-to-other-firmware) for a detailed list of features and their individual pages.
 

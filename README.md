@@ -1,98 +1,43 @@
 # v2.momentum-fw.dev
 
-This repository contains the source for the Momentum Firmware website at [momentum-fw.dev](https://momentum-fw.dev). The site is built using VitePress with Vue 3 components and provides multilingual documentation, firmware update capabilities, release changelogs, and asset packs.
+Source of the Momentum-dx website at <https://momentum-dx.project516.dev>. Momentum-dx is a bleeding-edge fork of Momentum Firmware for the Flipper Zero. The site is an unofficial fork of the Momentum website, built with VitePress and Vue 3. It has the web updater, release pages, asset packs and the wiki.
 
-## Project Structure
+Momentum-dx is not affiliated with Next-Flip or the Momentum team.
 
-```zig
-v2.momentum-fw.dev/
-├── .vitepress/          // VitePress configuration and theme
-│   ├── theme/           // Vue components and composables
-│   ├── config/          // Generated locale-specific configs
-│   └── i18n/            // Internationalization messages
-├── scripts/             // Build and utility scripts
-│   ├── config.ts        // VitePress config generation
-│   ├── prebuild.ts      // Pre-build automation
-│   ├── releases.ts      // Release data fetching
-│   └── utils.ts         // Build utilities
-├── wiki/                // Documentation content (`locale/` have their own `wiki/` directory)
-├── public/              // Static assets (png, svg, etc.)
-└── _data/               // Generated data files created during the build process
+## How releases reach the site
+
+Firmware releases come from GitHub Releases of [`momentum-dx/Momentum-Firmware-dx`](https://github.com/momentum-dx/Momentum-Firmware-dx). A release is a tag named `dx-YYYY.MM.DD` on `dev`. CI there builds the tag and publishes the release.
+
+At build time, `scripts/releases.ts`:
+
+1. Reads the releases from the GitHub API. It keeps tags that start with `dx-` and are not drafts or prereleases, and takes the newest 5.
+2. Downloads their assets into `public/builds/firmware/<tag>/`.
+3. Writes `public/firmware/directory.json` in the format of the Momentum update server, with the latest release only. The web updater and qFlipper read this file.
+4. Writes `public/firmware/latest.txt` with the latest tag.
+5. Writes `_data/releases.ts` for the pages.
+
+The deploy workflow publishes the site to GitHub Pages. It runs on every push to `dev`, and every 30 minutes it compares the latest release tag with `latest.txt` on the live site. It only builds when they differ.
+
+Asset packs still come from the public Momentum asset pack index at `up.momentum-fw.dev`.
+
+## Development
+
+Requires [Bun](https://bun.sh/docs/installation).
+
+```bash
+bun install
+bun run dev          # fetches data, then starts the dev server
+bun run dev:skip     # reuses the data from the last fetch
+bun run build        # production build into .vitepress/dist
+bun run lint:check
 ```
 
-## Development Setup
-
-##### Prerequisites
-
-- Node.js (v18 or higher)
-- [Bun](https://bun.sh/docs/installation) (package manager) (v1.2.2 or higher)
-
-### Installation
-
-1. Clone the repository:
-   ```matlab
-   git clone https://github.com/Next-Flip/v2.momentum-fw.dev.git
-   cd v2.momentum-fw.dev
-   ```
-
-2. Install dependencies:
-   ```elixir
-   bun install
-   ```
-
-3. Start the development server:
-   ```elixir
-   bun run dev
-   ```
-
-The development server will be available at `http://localhost:5173`.
-
-> [!NOTE]
-> Data fetching (releases and asset packs) is required at least once for certain pages to function. After the initial fetch, you can use `bun run dev:skip` without re-fetching external data.
-
-### Available Commands
-
-```elixir
-# Development
-bun run dev              # Start development server with data fetching
-bun run dev:skip         # Start development server without fetching external data (fetch needs to be run at least once before dev or preview)
-
-# Production
-bun run build            # Build for production
-bun run preview          # Preview production build
-bun run build:skip       # Build without fetching external data (fetch needs to be run at least once before dev or preview)
-bun run build:preview    # Build and preview
-bun run preview:skip     # Preview production build without fetching external data (fetch needs to be run at least once)
-
-# Maintenance
-bun run lint            # Lint components and composables
-bun run lint:all        # Lint all project files
-bun run pretty          # Format code with Prettier
-bun run clean:build     # Clean install and build
-```
-
-### Pre-build Process
-
-1. **Pre-build** ([`scripts/prebuild.ts`](scripts/)):
-   - `SKIP_FETCH=true` These can be skipped if you're just developing the site and don't need to fetch the latest data.
-        - **Asset Packs**: Fetches asset pack directory from `https://up.momentum-fw.dev/asset-packs/directory.json`
-        - **Releases**: Scrapes firmware build pages from `https://up.momentum-fw.dev/builds/firmware/` to get mainline releases and devbuilds
-   - **Changelogs**: Downloads changelog files from GitHub raw content for each release
-   - **Config Generation**: Creates VitePress configuration files for all locales ([`scripts/config.ts`](scripts/config.ts))
-   - **Dependencies**: Patches oh-vue-icons imports and updates build metadata ([`scripts/utils.ts`](scripts/utils.ts))
+Set `GITHUB_TOKEN` to avoid GitHub API rate limits. To test with fake releases, set `RELEASES_FIXTURE` to a JSON file in the GitHub releases API format. Asset `browser_download_url` values may be `file://` URLs.
 
 ## Credits
 
+- [Momentum-Website](https://github.com/Next-Flip/Momentum-Website) by Next-Flip, the site this fork is based on
 - [flipperzero-protobuf](https://github.com/flipperdevices/flipperzero-protobuf)
-- [labs.flipper.net](https://github.com/flipperdevices/lab.flipper.net)
-- [Momentum-Website](https://github.com/Next-Flip/Momentum-Website)
+- [lab.flipper.net](https://github.com/flipperdevices/lab.flipper.net)
 
-## Support
-
-If you enjoy the firmware please __**spread the word!**__ And if you really love it, maybe consider donating to the team? :D
-
-- **[Ko-fi](https://ko-fi.com/willyjl)**: One-off or Recurring, No signup required
-- **[PayPal](https://paypal.me/willyjl1)**: One-off, Signup required
-- **BTC**: `1EnCi1HF8Jw6m2dWSUwHLbCRbVBCQSyDKm`
-
-**Thank you <3**
+Licensed under GPL-3.0. See [LICENSE](LICENSE).

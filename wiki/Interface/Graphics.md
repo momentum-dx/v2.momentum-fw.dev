@@ -13,10 +13,10 @@ head:
         content: "Settings for the current Asset Pack"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Interface/Graphics"
+        content: "https://momentum-dx.project516.dev/wiki/Interface/Graphics"
     - - meta
       - name: "twitter:title"
         content: "Graphics | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Settings for the current Asset Pack"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # Graphics
@@ -36,7 +36,7 @@ The Graphics settings allow you to customize the visual appearance of your Flipp
 
 Asset Packs are a feature exclusive to Momentum Firmware that allows you to load custom Animations, Icons and Fonts without recompiling the firmware. They function as complete theme packages that can change your Flipper's appearance.
 
-- Navigate to `Asset Pack` to select from any [pre-installed](https://github.com/Next-Flip/Momentum-Firmware/tree/dev/assets/packs) or [community-made](https://momentum-fw.dev/asset-packs) packs.
+- Navigate to `Asset Pack` to select from any [pre-installed](https://github.com/Next-Flip/Momentum-Firmware/tree/dev/assets/packs) or [community-made](https://momentum-dx.project516.dev/asset-packs) packs.
 - Packs are loaded externally from the SD Card at `/ext/asset_packs/*`
 - Each pack can contain (all optional):
     - Custom Animations (stored in `Anims/`)

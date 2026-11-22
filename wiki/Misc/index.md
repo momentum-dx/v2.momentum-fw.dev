@@ -13,10 +13,10 @@ head:
         content: "Miscellaneous device personalization settings"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Misc"
+        content: "https://momentum-dx.project516.dev/wiki/Misc"
     - - meta
       - name: "twitter:title"
         content: "Misc | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Miscellaneous device personalization settings"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 prev:
     text: "GPIO Pins"
     link: "/wiki/Protocols/GPIO"

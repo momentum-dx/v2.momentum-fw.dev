@@ -13,10 +13,10 @@ head:
         content: "General settings for the Flipper's look and feel"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Interface/General"
+        content: "https://momentum-dx.project516.dev/wiki/Interface/General"
     - - meta
       - name: "twitter:title"
         content: "General | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "General settings for the Flipper's look and feel"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # General

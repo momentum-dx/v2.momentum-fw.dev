@@ -14,10 +14,10 @@ head:
         content: "Download community-made asset packs for Momentum Firmware"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/asset-packs"
+        content: "https://momentum-dx.project516.dev/asset-packs"
     - - meta
       - name: "twitter:title"
         content: "Asset Packs | Momentum Firmware"
@@ -26,7 +26,7 @@ head:
         content: "Download community-made asset packs for Momentum Firmware"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 <AssetPacksPage />

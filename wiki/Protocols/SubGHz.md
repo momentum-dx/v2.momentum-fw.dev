@@ -13,10 +13,10 @@ head:
         content: "Settings for the Flipper Zero's SubGHz radio"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Protocols/SubGHz"
+        content: "https://momentum-dx.project516.dev/wiki/Protocols/SubGHz"
     - - meta
       - name: "twitter:title"
         content: "SubGHz | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Settings for the Flipper Zero's SubGHz radio"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # SubGHz

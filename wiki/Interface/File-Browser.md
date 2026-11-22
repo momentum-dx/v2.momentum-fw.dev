@@ -13,10 +13,10 @@ head:
         content: "Customization of the file browser (Archive)"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Interface/File-Browser"
+        content: "https://momentum-dx.project516.dev/wiki/Interface/File-Browser"
     - - meta
       - name: "twitter:title"
         content: "File Browser | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Customization of the file browser (Archive)"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # File Browser

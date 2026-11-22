@@ -13,10 +13,10 @@ head:
         content: "Assignment of GPIO pins for external connections"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Protocols/GPIO"
+        content: "https://momentum-dx.project516.dev/wiki/Protocols/GPIO"
     - - meta
       - name: "twitter:title"
         content: "GPIO | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Assignment of GPIO pins for external connections"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # GPIO Pins

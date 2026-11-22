@@ -37,6 +37,9 @@ _data/*
 !.vitepress/config/
 !.vitepress/config/sidebar.ts
 
+public/builds/
+public/firmware/
+
 .env
 .env.*
 !.env.example
@@ -60,5 +63,4 @@ _data/*
 public/backup/
 
 .DS_Store
-.vercel
 TODO.md

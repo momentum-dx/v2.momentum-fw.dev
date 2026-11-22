@@ -27,6 +27,7 @@ import {
     replaceIn,
     unpack,
 } from "../util";
+import { FIRMWARE_FILES_URL } from "../../site";
 import { useProxiedUrl } from "./useProxiedUrl";
 import { useSettings } from "./useSettings";
 
@@ -1349,7 +1350,7 @@ export const useSerialConnection = () => {
 
             addLog(
                 "verbose",
-                `[Firmware] Fetching firmware: <a href="${firmwareUrl}" target="_blank">${replaceIn(firmwareUrl, "https://up.momentum-fw.dev/builds/firmware", "")}</a>`,
+                `[Firmware] Fetching firmware: <a href="${firmwareUrl}" target="_blank">${replaceIn(firmwareUrl, FIRMWARE_FILES_URL, "")}</a>`,
             );
             files = await fetchFirmware(firmwareUrl);
 

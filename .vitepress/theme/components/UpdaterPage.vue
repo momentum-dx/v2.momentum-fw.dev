@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { track } from "@vercel/analytics";
 import { useDropZone, useStorage, useWindowSize } from "@vueuse/core";
 import {
     computed,
@@ -12,13 +11,8 @@ import {
     useTemplateRef,
     watch,
 } from "vue";
-import type { ReleaseChannel, ReleaseItem } from "../../../_data/releases";
-import {
-    branchReleases,
-    devbuildReleases,
-    getReleaseByVersion,
-    mainlineReleases,
-} from "../../../_data/releases";
+import type { ReleaseItem } from "../../../_data/releases";
+import { getReleaseByVersion, mainlineReleases } from "../../../_data/releases";
 import {
     useConnectionInfo,
     useI18n,
@@ -26,18 +20,16 @@ import {
     usePanelResize,
     useReleaseNavigation,
     useSerialConnection,
-    useSettings,
     useSharedHover,
-    useThemeSwitcher,
 } from "../composables";
 import { formatDate } from "../date";
+import { FIRMWARE_FILES_URL } from "../../site";
 import { STORAGE_KEYS } from "../types";
 import {
     bytesToSize,
     devMode,
     downloadFile,
     getFirmwareDownloadUrl,
-    githubPullRequestUrl,
     parseUploadedFileName,
     replaceIn,
     supportsSerialPort,
@@ -56,8 +48,6 @@ const { tr, getLocalizedPath } = useI18n();
 const { width: windowWidth, height: windowHeight } = useWindowSize();
 const { flags, isConnected: connectionIsConnected } = useConnectionInfo();
 const { isHovered: isInstallButtonHovered } = useSharedHover("disabled-install-button");
-const { currentTheme } = useThemeSwitcher();
-const { screenColor } = useSettings();
 
 const panelContainerRef = useTemplateRef<HTMLElement>("panelContainerRef");
 const dividerRef = useTemplateRef<HTMLElement>("dividerRef");
@@ -75,7 +65,6 @@ const {
 });
 
 const serialConnection = inject<ReturnType<typeof useSerialConnection> | null>("serialConnection");
-const selectedChannel = ref<ReleaseChannel | null>(null);
 
 const logToSerial = (level: "info" | "warning" | "error", message: string) => {
     if (serialConnection && serialConnection.addLog) {
@@ -88,13 +77,9 @@ const { selectedRelease, selectRelease } = useReleaseNavigation({
     useQueryParams: true,
     storageKeys: {
         selectedVersion: STORAGE_KEYS.UPDATER_SELECTED_VERSION,
-        selectedChannel: STORAGE_KEYS.UPDATER_SELECTED_CHANNEL,
     },
     defaultFallback: () => {
         return !supportsSerialPort() ? mainlineReleases[0] : null;
-    },
-    onChannelChange: (channel: ReleaseChannel) => {
-        selectedChannel.value = channel;
     },
 });
 
@@ -119,7 +104,6 @@ provide("logsScrollTrigger", logsScrollTrigger);
 const showUpdateOverlay = computed(() => serialConnection?.flags.updateInProgress || false); // TEST: DO NOT leave this as true
 const isConnected = computed(() => connectionIsConnected.value);
 const isNarrowViewport = computed(() => windowHeight.value < 1024);
-const isBranchRelease = computed(() => selectedChannel.value === "branch");
 
 const isMatchingRelease = computed(() => {
     const deviceCommit = serialConnection?.connectionData.deviceInfo?.firmware_commit;
@@ -128,111 +112,38 @@ const isMatchingRelease = computed(() => {
     if (!deviceVersion) return false;
 
     const uploadFileName = uploadedFile.value?.name.toLowerCase();
-
-    if (uploadFileName?.includes("mntm-dev")) {
-        if (uploadFileName?.includes(deviceCommit.toLowerCase())) return true;
-    } else {
-        if (uploadFileName?.includes(deviceVersion.toLowerCase())) return true;
-    }
+    if (uploadFileName?.includes(deviceVersion.toLowerCase())) return true;
 
     if (selectedRelease.value) {
         if (uploadedFile.value || uploadedFileRelease.value) return false;
-
-        if (deviceVersion === "mntm-dev") {
-            const releaseCommit = selectedRelease.value.version || selectedRelease.value.branch;
-            return deviceCommit === releaseCommit;
-        } else {
-            return deviceVersion === selectedRelease.value.version;
-        }
+        return deviceVersion === selectedRelease.value.version;
     }
 
     return false;
-});
-
-const channelReleases = computed(() => {
-    if (!selectedChannel.value) return [];
-    return selectedChannel.value === "mainline"
-        ? mainlineReleases
-        : selectedChannel.value === "devbuild"
-          ? devbuildReleases
-          : branchReleases;
 });
 
 const currentChangelogRelease = computed(() => {
     return selectedRelease.value;
 });
 
-watch(
-    [() => selectedChannel.value, () => isMatchingRelease.value, () => selectedRelease.value],
-    ([newChannel, newIsMatching, newRelease], [oldChannel, oldIsMatching, oldRelease]) => {
-        if (typeof window !== "undefined") {
-            if (newChannel !== oldChannel) {
-                if (newChannel && selectedRelease.value) {
-                    const currentChannelReleases =
-                        newChannel === "mainline"
-                            ? mainlineReleases
-                            : newChannel === "devbuild"
-                              ? devbuildReleases
-                              : branchReleases;
-                    const releaseExists = currentChannelReleases.some(
-                        (release) => release.version === selectedRelease.value?.version,
-                    );
+watch(isMatchingRelease, (newIsMatching, oldIsMatching) => {
+    if (typeof window === "undefined" || !newIsMatching || oldIsMatching) return;
 
-                    if (!releaseExists) {
-                        selectedRelease.value = null;
-                    }
-                }
-            }
+    const deviceCommit = serialConnection?.connectionData.deviceInfo?.firmware_commit;
+    const deviceVersion = serialConnection?.connectionData.deviceInfo?.firmware_version;
+    if (!deviceCommit && !deviceVersion) return;
 
-            if (newRelease && newRelease !== oldRelease && newChannel === "branch") {
-                const branchLink = newRelease.pr
-                    ? `<a href="${githubPullRequestUrl(newRelease.pr)}" target="_blank">${newRelease.version}</a>`
-                    : newRelease.version;
-                logToSerial(
-                    "warning",
-                    `[Branch] Selected experimental branch: ${branchLink}. Proceed at your own risk.`,
-                );
-            }
+    const [inner, logType] =
+        uploadedFile.value || uploadedFileRelease.value
+            ? ["Uploaded file", "Upload"]
+            : ["Selected firmware", "Release"];
+    const logVersion = `<a href="${getLocalizedPath("/releases")}/${deviceVersion}" target="_blank">${deviceVersion}</a>`;
 
-            if (newIsMatching && !oldIsMatching) {
-                const deviceCommit = serialConnection?.connectionData.deviceInfo?.firmware_commit;
-                const deviceVersion = serialConnection?.connectionData.deviceInfo?.firmware_version;
-                if (deviceCommit || deviceVersion) {
-                    let inner = "Selected firmware";
-                    let logType = "Release";
-
-                    if (uploadedFile.value || uploadedFileRelease.value) {
-                        inner = "Uploaded file";
-                        logType = "Upload";
-                    } else if (selectedChannel.value === "branch" && selectedRelease.value) {
-                        inner = "Selected firmware";
-                        logType = "Branch";
-                    }
-
-                    const logVersion =
-                        deviceVersion === "mntm-dev"
-                            ? "mntm-dev"
-                            : `<a href="${getLocalizedPath("/releases")}/${deviceVersion}" target="_blank">${deviceVersion}</a>`;
-                    const logCommit =
-                        deviceVersion === "mntm-dev" && logType !== "Branch"
-                            ? `<a href="${getLocalizedPath("/releases")}/${deviceCommit}" target="_blank">${deviceCommit}</a>`
-                            : `<a class="!no-underline">${deviceCommit}</a>`;
-                    const displayVersion =
-                        logType === "Branch" && selectedRelease.value
-                            ? selectedRelease.value.pr
-                                ? `<a href="${githubPullRequestUrl(selectedRelease.value.pr)}" target="_blank">${selectedRelease.value.version}</a>`
-                                : selectedRelease.value.version
-                            : logVersion;
-
-                    logToSerial(
-                        "warning",
-                        `[${logType}] ${inner} matches current Flipper firmware (${displayVersion}, ${logCommit})`,
-                    );
-                }
-            }
-        }
-    },
-);
+    logToSerial(
+        "warning",
+        `[${logType}] ${inner} matches current Flipper firmware (${logVersion}, <a class="!no-underline">${deviceCommit}</a>)`,
+    );
+});
 
 const processFile = (file: File, source: "uploaded" | "selected") => {
     if (!file.name.endsWith(".tgz")) {
@@ -293,21 +204,6 @@ const { isOverDropZone: rawIsOverDropZone } = useDropZone(dropZoneRef, {
 
 const isOverDropZone = computed(() => rawIsOverDropZone.value && !flags.value.updateInProgress);
 
-const handleChannelChange = (channel: ReleaseChannel) => {
-    selectedChannel.value = channel;
-    const releases =
-        channel === "mainline"
-            ? mainlineReleases
-            : channel === "devbuild"
-              ? devbuildReleases
-              : branchReleases;
-    if (releases.length > 0) {
-        selectRelease(releases[0]);
-    } else {
-        selectedRelease.value = null;
-    }
-};
-
 const handleReleaseChange = (release: ReleaseItem) => {
     selectRelease(release);
 };
@@ -326,21 +222,14 @@ const handleFlashFirmware = async () => {
 
     const uploadedForTest = uploadedFile.value ?? null;
     const uploadedForUpdate = uploadedFile.value ?? undefined;
-    const trackingVersion =
-        releaseArg?.version || uploadedFile.value?.name.replace(".tgz", "") || "null";
     if (uploadedFile.value) {
         clearUploadedFile(false);
     }
 
-    const success = testMode.value
-        ? await serialConnection.testUpdateFirmware(releaseArg, uploadedForTest, loopMode.value)
-        : await serialConnection.updateFirmware(releaseArg, uploadedForUpdate);
-
-    if (success) {
-        track("firmware_flash", {
-            version: trackingVersion,
-            theme: `${currentTheme.value}_${screenColor.value}`,
-        });
+    if (testMode.value) {
+        await serialConnection.testUpdateFirmware(releaseArg, uploadedForTest, loopMode.value);
+    } else {
+        await serialConnection.updateFirmware(releaseArg, uploadedForUpdate);
     }
 };
 
@@ -353,7 +242,7 @@ const handleDownloadRelease = () => {
         downloadFile(firmwareUrl);
         logToSerial(
             "info",
-            `[Download] Downloading firmware tgz: <a href="${firmwareUrl}" target="_blank">${replaceIn(firmwareUrl, "https://up.momentum-fw.dev/builds/firmware", "")}</a>`,
+            `[Download] Downloading firmware tgz: <a href="${firmwareUrl}" target="_blank">${replaceIn(firmwareUrl, FIRMWARE_FILES_URL, "")}</a>`,
         );
     } else {
         logToSerial("error", "[Download] No firmware download URL found for selected release");
@@ -560,9 +449,7 @@ onBeforeUnmount(() => {
                         <Transition name="slide-up" mode="out-in">
                             <div
                                 v-if="
-                                    !isChangelogExpanded &&
-                                    !showUpdateOverlay &&
-                                    (isMatchingRelease || (isBranchRelease && !uploadedFile))
+                                    !isChangelogExpanded && !showUpdateOverlay && isMatchingRelease
                                 "
                                 class="bg-vp-dark/75 mt-4 lg:mt-0"
                                 :class="{
@@ -572,9 +459,7 @@ onBeforeUnmount(() => {
                                 <div class="updater-warning-container">
                                     <UpdaterWarning
                                         :is-over-drop-zone="isOverDropZone"
-                                        :is-branch-release="isBranchRelease"
                                         :uploaded-file="uploadedFile"
-                                        :selected-release="selectedRelease"
                                         :is-matching-release="isMatchingRelease"
                                     />
                                 </div>
@@ -615,12 +500,10 @@ onBeforeUnmount(() => {
                                             }"
                                         >
                                             <UpdaterControls
-                                                :selected-channel="selectedChannel"
                                                 :selected-release="selectedRelease"
-                                                :channel-releases="channelReleases"
+                                                :releases="mainlineReleases"
                                                 :uploaded-file="uploadedFile"
                                                 :test-mode="testMode"
-                                                @channel-change="handleChannelChange"
                                                 @release-change="handleReleaseChange"
                                                 @flash-firmware="handleFlashFirmware"
                                                 @download-release="handleDownloadRelease"
