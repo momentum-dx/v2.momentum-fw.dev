@@ -1,69 +1,26 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { devbuildReleases, mainlineReleases, type ReleaseItem } from "../../../_data/releases";
+import { computed } from "vue";
+import { mainlineReleases } from "../../../_data/releases";
 import { useI18n } from "../composables";
 import { formatDate } from "../date";
-import { githubBranchUrl, githubTagUrl, githubUrl } from "../util";
+import { githubTagUrl, githubUrl } from "../util";
 
 const { getLocalizedPath, tr } = useI18n();
 
-const props = defineProps<{
-    selectedRelease: ReleaseItem | null;
-}>();
-
-const imageLoaded = ref(false);
-const imageExists = ref(false);
-const imageSrc = ref<string>("");
-
-const isDevBuild = computed(() => {
-    return !!props.selectedRelease?.commit;
-});
-
-const loadImageAsync = async (version: string) => {
-    try {
-        const imageUrl = `/og/${version}.png`;
-        const img = new Image();
-
-        return new Promise<boolean>((resolve) => {
-            img.onload = () => {
-                imageSrc.value = imageUrl;
-                resolve(true);
-            };
-            img.onerror = () => {
-                resolve(false);
-            };
-            img.src = imageUrl;
-        });
-    } catch {
-        return false;
-    }
-};
-
-const shouldShowImage = computed(() => {
-    return props.selectedRelease && !isDevBuild.value && imageExists.value && imageLoaded.value;
-});
+const latest = computed(() => mainlineReleases[0]);
 
 const infoItems = computed(() => [
     {
-        href: getLocalizedPath(`/releases/${mainlineReleases[0]?.version}`),
-        link: githubTagUrl(mainlineReleases[0]?.version || ""),
+        href: getLocalizedPath(`/releases/${latest.value?.version}`),
+        link: githubTagUrl(latest.value?.version || ""),
         key: "aside_latest_release" as const,
-        value: mainlineReleases[0]?.version,
-        condition: mainlineReleases[0]?.version,
-    },
-    {
-        href: getLocalizedPath(`/releases/${devbuildReleases[0]?.version}`),
-        link: githubBranchUrl(devbuildReleases[0]?.commit || ""),
-        key: "aside_latest_devbuild" as const,
-        value: devbuildReleases[0]?.version,
-        condition: devbuildReleases[0]?.version,
+        value: latest.value?.version,
+        condition: latest.value?.version,
     },
     {
         key: "aside_last_build_date" as const,
-        value: devbuildReleases[0]?.timestamp
-            ? formatDate(devbuildReleases[0].timestamp, "withTime")
-            : null,
-        condition: devbuildReleases[0]?.timestamp,
+        value: latest.value?.timestamp ? formatDate(latest.value.timestamp, "withTime") : null,
+        condition: latest.value?.timestamp,
     },
 ]);
 
@@ -78,34 +35,7 @@ const supportLinks = [
         href: `${githubUrl}/issues`,
         external: true,
     },
-    {
-        key: "aside_discord_alerts" as const,
-        href: "https://discord.com/channels/1211622338198765599/1245274311498141806",
-        external: true,
-    },
 ];
-
-const openImageInNewTab = (version: string) => {
-    window.open(`/og/${version}.png`, "_blank");
-};
-
-watch(
-    () => props.selectedRelease?.version,
-    async (newVersion) => {
-        imageExists.value = false;
-        imageLoaded.value = false;
-        imageSrc.value = "";
-
-        if (newVersion && !isDevBuild.value) {
-            const exists = await loadImageAsync(newVersion);
-            if (exists) {
-                imageExists.value = true;
-                imageLoaded.value = true;
-            }
-        }
-    },
-    { immediate: true },
-);
 </script>
 
 <template>
@@ -178,15 +108,6 @@ watch(
                         {{ tr(link.key) }}
                     </a>
                 </div>
-            </div>
-
-            <div v-if="shouldShowImage" class="mt-8">
-                <img
-                    :src="imageSrc"
-                    :alt="selectedRelease?.version"
-                    class="w-full h-auto rounded-lg border !my-0 border-vp-divider/30 cursor-pointer select-none"
-                    @click="openImageInNewTab(selectedRelease?.version || '')"
-                />
             </div>
         </div>
     </aside>

@@ -34,12 +34,10 @@ const shouldShow = computed(() => {
 const extractNoticeText = computed(() => {
     const firmwareVersion = (connectionData.value.deviceInfo as { firmware_version: string })
         .firmware_version;
-    const release = (
-        firmwareVersion.includes("dev") ? recentReleases.devbuilds : recentReleases.mainline
-    )[0];
+    const release = recentReleases.mainline[0];
     return tr("connection_unable_to_extract_desc", {
         version: `${firmwareVersion} (${connectionData.value.deviceInfo?.firmware_commit})`,
-        url: getLocalizedPath(`/releases/${release.version}`),
+        url: getLocalizedPath(release ? `/releases/${release.version}` : "/releases"),
     });
 });
 </script>

@@ -260,7 +260,6 @@ export const STORAGE_KEYS = {
     ASSET_PACK_FILTERS: "momentum-asset-packs_filters",
     UPDATER_LOGS_STATE: "momentum-updater_logs_state",
     UPDATER_CHANGELOG_STATE: "momentum-updater_changelog_state",
-    UPDATER_SELECTED_CHANNEL: "momentum-updater_selected_channel",
     UPDATER_SELECTED_VERSION: "momentum-updater_selected_version",
     UPDATER_DEVICE_INFO_TAB: "momentum-updater_device-info-tab",
     AUTO_CONNECT: "momentum-autoconnect-enabled",

@@ -5,13 +5,14 @@ import { recentReleases } from "../../../_data/releases";
 import { formatDate } from "../date";
 
 import { buildInfo } from "../../../_data/buildInfo";
+import { MOMENTUM_URL, OFW_URL, SITE_NAME, UNLEASHED_URL, WEBSITE_REPO } from "../../site";
 import { useI18n, useThemeSwitcher } from "../composables";
 import { githubBlobUrl, githubUrl } from "../util";
 import FooterSection from "./FooterSection.vue";
 
 const { site } = useData();
 const { tr } = useI18n();
-const { currentLogo, nextLogo, isLocked, toggleLock } = useThemeSwitcher();
+const { nextLogo, isLocked, toggleLock } = useThemeSwitcher();
 const route = useRoute();
 const isWiki = computed(() => route.path.includes("wiki"));
 
@@ -36,9 +37,9 @@ const formattedLastUpdate = computed(() => {
 
 const socialLinks = computed(() => [
     { name: "Github", url: githubUrl },
-    { name: "Discord", url: "https://discord.gg/momentum" },
-    { name: "X/Twitter", url: "https://x.com/FlipperMomentum" },
-    { name: "Reddit", url: "https://www.reddit.com/r/flippermomentum/" },
+    { name: "Momentum", url: MOMENTUM_URL },
+    { name: "OFW", url: OFW_URL },
+    { name: "Unleashed", url: UNLEASHED_URL },
 ]);
 
 const navigationLinks = computed(() => [
@@ -51,7 +52,6 @@ const navigationLinks = computed(() => [
         name: tr("nav_report_a_bug"),
         url: `${githubUrl}/issues`,
     },
-    { name: tr("nav_donate"), url: "https://ko-fi.com/willyjl" },
 ]);
 </script>
 
@@ -70,15 +70,13 @@ const navigationLinks = computed(() => [
                         <div class="flex flex-row items-center gap-3 pb-3.5">
                             <a
                                 href="/"
-                                class="footer-logo inline-block transition-transform hover:scale-105 w-8 h-8 object-contain object-center select-none"
+                                class="footer-logo inline-block transition-transform hover:scale-105 select-none"
                                 @mouseenter="handleLogoHover"
                                 @mouseleave="handleLogoLeave"
                             >
-                                <img
-                                    :src="currentLogo"
-                                    alt="Momentum Firmware"
-                                    class="w-8 h-8 object-contain object-center"
-                                />
+                                <span class="text-lg font-bold text-vp-1 whitespace-nowrap">{{
+                                    SITE_NAME
+                                }}</span>
                             </a>
                             <button
                                 :aria-label="isLocked ? tr('theme_locked') : ''"
@@ -102,6 +100,9 @@ const navigationLinks = computed(() => [
                         <p class="text-sm text-vp-2 max-w-72 select-none">
                             {{ siteDescription }}
                         </p>
+                        <p class="text-xs text-vp-3 max-w-72 mt-2">
+                            {{ tr("footer_unofficial") }}
+                        </p>
                     </div>
 
                     <div
@@ -114,14 +115,9 @@ const navigationLinks = computed(() => [
                                 rel="noopener noreferrer"
                                 class="hover:text-vp-brand-1 transition-colors duration-100 hover:underline select-none"
                             >
-                                GPL-3.0 © 2025 Next-Flip
+                                GPL-3.0, based on Momentum by Next-Flip
                             </a>
                         </p>
-                        <img
-                            src="/svg/yapluv.png"
-                            alt="Yap"
-                            class="w-5 h-5 object-contain object-center cursor-pointer hover:scale-105 transition-transform duration-100 select-none"
-                        />
                     </div>
 
                     <div
@@ -134,7 +130,7 @@ const navigationLinks = computed(() => [
                             <span class="text-vp-3/40 select-none">·</span>
                             <a
                                 class="text-[13px] font-normal text-vp-3/50 hover:underline hover:text-vp-brand-1 transition-colors duration-100"
-                                :href="`https://github.com/Next-Flip/v2.momentum-fw.dev/commit/${buildInfo.commitHash}`"
+                                :href="`https://github.com/${WEBSITE_REPO}/commit/${buildInfo.commitHash}`"
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
@@ -145,19 +141,13 @@ const navigationLinks = computed(() => [
                 </div>
 
                 <div
-                    v-if="recentReleases.mainline.length > 0 || recentReleases.devbuilds.length > 0"
                     class="grid grid-cols-2 grid-rows-[auto_auto] justify-start gap-y-10 md:flex md:flex-row gap-24 xl:gap-20"
                 >
                     <div class="contents md:block md:space-y-6">
                         <FooterSection
-                            :title="tr('footer_mainline')"
+                            v-if="recentReleases.mainline.length > 0"
+                            :title="tr('footer_releases')"
                             :items="recentReleases.mainline"
-                            type="release"
-                        />
-
-                        <FooterSection
-                            :title="tr('footer_devbuilds')"
-                            :items="recentReleases.devbuilds.slice(0, 4)"
                             type="release"
                         />
                     </div>

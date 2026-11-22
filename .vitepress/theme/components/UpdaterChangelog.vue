@@ -2,13 +2,8 @@
 import { useScroll, useWindowSize } from "@vueuse/core";
 import MarkdownIt from "markdown-it";
 import { computed, useTemplateRef } from "vue";
-import { branchReleases, type ReleaseItem } from "../../../_data/releases";
-import {
-    githubPullRequestUrl,
-    githubUrl,
-    replaceIssuesAndMentions,
-    supportsSerialPort,
-} from "../util";
+import type { ReleaseItem } from "../../../_data/releases";
+import { githubUrl, replaceIssuesAndMentions, supportsSerialPort } from "../util";
 
 import { useI18n, useMounted } from "../composables";
 import ScrollFade from "./ScrollFade.vue";
@@ -53,12 +48,6 @@ const emit = defineEmits<{
 const isExpanded = computed(() => props.changelogState === "expanded");
 const isOpen = computed(() => props.changelogState === "open");
 const isClosed = computed(() => props.changelogState === "closed");
-const isMainline = computed(() => {
-    return props.selectedRelease?.version.includes("mntm");
-});
-const isDevBuild = computed(() => {
-    return props.selectedRelease?.branch?.includes("dev");
-});
 
 const handleToggleOpenClose = () => {
     emit("toggle-open-close");
@@ -88,24 +77,9 @@ const displayVersion = computed(() => {
     return release.version;
 });
 
-const isBranchRelease = computed(() => {
-    if (!displayRelease.value) return false;
-    return branchReleases.some((r) => r.version === displayRelease.value?.version);
-});
-
-function getIconContent(branch: string, mainline: string, commit: string): string {
-    if (isBranchRelease.value) return branch;
-    if (isMainline.value) return mainline;
-    return commit;
-}
-
 const parsedChangelog = computed(() => {
     if (!displayRelease.value?.changelog) return "";
-    const withGitHubLinks = replaceIssuesAndMentions(
-        displayRelease.value.changelog,
-        isBranchRelease.value,
-    );
-    return md.render(withGitHubLinks);
+    return md.render(replaceIssuesAndMentions(displayRelease.value.changelog));
 });
 
 const isAccessible = computed(() => {
@@ -120,9 +94,6 @@ const shouldShowExternalLink = computed(() => {
 });
 
 const releaseHref = computed(() => {
-    if (isBranchRelease.value) {
-        return githubPullRequestUrl(displayRelease.value?.pr || "");
-    }
     if (!shouldShowExternalLink.value || !displayRelease.value) return "";
     return getLocalizedPath(`/releases/${displayRelease.value.version}`);
 });
@@ -173,29 +144,17 @@ const isMounted = useMounted();
                             :aria-label="tr('releases_current_version')"
                         >
                             <v-icon
-                                :name="getIconContent('oi-git-branch', 'oi-tag', 'oi-git-commit')"
-                                :aria-label="
-                                    getIconContent(
-                                        tr('updater_branch_label'),
-                                        tr('releases_mainline'),
-                                        tr('releases_devbuild'),
-                                    )
-                                "
-                                :title="
-                                    getIconContent(
-                                        tr('updater_branch_label'),
-                                        tr('releases_mainline'),
-                                        tr('releases_devbuild'),
-                                    )
-                                "
-                                :scale="isBranchRelease ? 0.9 : isMainline ? 0.85 : 1.05"
+                                name="oi-tag"
+                                :aria-label="tr('releases_mainline')"
+                                :title="tr('releases_mainline')"
+                                :scale="0.85"
                             />
                         </div>
                         <Tooltip
                             :disabled="!shouldShowExternalLink"
                             :delay="0"
                             position="right"
-                            :x-padding="isBranchRelease ? 1.5 : 2.5"
+                            :x-padding="2.5"
                         >
                             <a
                                 v-if="shouldShowExternalLink"
@@ -207,23 +166,15 @@ const isMounted = useMounted();
                                 {{ displayVersion }}
                             </a>
                             <template #content>
-                                <div v-if="isBranchRelease" class="-mb-px">
-                                    <v-icon
-                                        name="bi-github"
-                                        scale="1"
-                                        aria-label="GitHub"
-                                        title="GitHub"
-                                    />
-                                </div>
-                                <div v-else>
+                                <div>
                                     {{ tr("updater_go_to_release") }}
                                 </div>
                             </template>
                         </Tooltip>
                         <a
-                            v-if="shouldShowExternalLink && !isBranchRelease"
+                            v-if="shouldShowExternalLink"
                             class="inline-flex items-center justify-center w-4 h-4 ml-1 text-vp-2 hover:text-vp-1 transition-colors duration-100 mb-px github-icon-link"
-                            :href="`${githubUrl}/${isDevBuild ? 'blob' : 'releases/tag'}/${displayRelease?.version}${isDevBuild ? '/CHANGELOG.md' : ''}`"
+                            :href="`${githubUrl}/releases/tag/${displayRelease?.version}`"
                             aria-label="GitHub"
                             target="_blank"
                             rel="noopener"
@@ -304,16 +255,9 @@ const isMounted = useMounted();
                 v-if="isAccessible && !isClosed"
                 ref="el"
                 class="flex-1 overflow-y-auto relative"
-                :class="{
-                    'px-8 pb-8': isExpanded,
-                    'pt-4 px-4 sm:px-5': isBranchRelease,
-                    'px-4 sm:px-6': !isBranchRelease,
-                }"
+                :class="isExpanded ? 'px-8 pb-8' : 'px-4 sm:px-6'"
             >
-                <div
-                    class="prose prose-sm dark:prose-invert max-w-none text-vp-1 mb-5"
-                    :class="{ 'prose-branch': isBranchRelease }"
-                >
+                <div class="prose prose-sm dark:prose-invert max-w-none text-vp-1 mb-5">
                     <Transition name="changelog-fade" mode="out-in">
                         <div :key="displayVersion" v-html="parsedChangelog"></div>
                     </Transition>
@@ -354,11 +298,6 @@ const isMounted = useMounted();
 </template>
 
 <style scoped>
-.prose-branch :deep(p) {
-    margin-top: 0.15rem !important;
-    margin-bottom: 0.15rem !important;
-}
-
 .prose :deep(h1),
 .prose :deep(h2),
 .prose :deep(h3),
@@ -431,10 +370,6 @@ const isMounted = useMounted();
 .prose :deep(em) {
     color: var(--vp-c-text-2);
     font-style: italic;
-}
-
-.prose-branch :deep(code) {
-    margin-right: 4px;
 }
 
 .prose :deep(code) {

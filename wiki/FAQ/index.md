@@ -14,10 +14,10 @@ head:
         content: "Frequently asked questions and troubleshooting help"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/FAQ"
+        content: "https://momentum-dx.project516.dev/wiki/FAQ"
     - - meta
       - name: "twitter:title"
         content: "FAQ | Momentum Firmware"
@@ -26,7 +26,7 @@ head:
         content: "Frequently asked questions and troubleshooting help"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 prev:
     text: Home
     link: /wiki/
@@ -78,7 +78,7 @@ No, the firmware is installed to the Flipper's internal storage and all your dat
 
 Mainline releases normally follow the update schedule of the upstream firmware ([OFW](https://github.com/flipperdevices/flipperzero-firmware)), and encompass all the features and improvements that have been added along the way. While dev builds are for incremental changes and bug fixes leading up to a full release, and give us time to try new things, they are usually just as stable as the Mainline.
 
-If you are unsure, or want to update less often, the [Mainline release](https://github.com/Next-Flip/Momentum-Firmware/releases) will work just fine.
+If you are unsure, or want to update less often, the [Mainline release](https://github.com/momentum-dx/Momentum-Firmware-dx/releases) will work just fine.
 
 Release pings for both can be found in these Discord channels: [`#mainline-releases`](https://discord.com/channels/1211622338198765599/1213549820271132802) · [`#dev-builds`](https://discord.com/channels/1211622338198765599/1213020009153167390).
 
@@ -153,7 +153,7 @@ More info for all these possible errors and what to do can be found in the [SubG
 
 ---
 
-<span id="format-warning"><sup>1. **WARNING**: Formatting the SD card deletes all the data on it and you'll need to install again. Refer to the [Backup methods](https://momentum-fw.dev/wiki/Installation/) before proceeding.</sup></span>
+<span id="format-warning"><sup>1. **WARNING**: Formatting the SD card deletes all the data on it and you'll need to install again. Refer to the [Backup methods](https://momentum-dx.project516.dev/wiki/Installation/) before proceeding.</sup></span>
 
 <style>
 .custom-toc li a {

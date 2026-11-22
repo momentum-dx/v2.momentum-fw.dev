@@ -65,8 +65,6 @@ export type MessageSchema = {
     home_update_to: string;
     home_latest: string;
     home_latest_mainline: string;
-    home_latest_devbuild: string;
-    home_dev: string;
 
     warning_popup_description: string;
     warning_popup_dont_show_again: string;
@@ -116,13 +114,11 @@ export type MessageSchema = {
     config_footer_copyright: string;
 
     nav_mainline: string;
-    nav_devbuilds: string;
     nav_changelog: string;
     nav_report_a_bug: string;
     nav_releases: string;
     nav_faq: string;
     nav_team: string;
-    nav_donate: string;
     nav_wiki: string;
     nav_resources: string;
     nav_web_updater: string;
@@ -132,19 +128,16 @@ export type MessageSchema = {
     aside_title: string;
     aside_desc: string;
     aside_latest_release: string;
-    aside_latest_devbuild: string;
     aside_last_build_date: string;
     aside_support: string;
     aside_documentation: string;
     aside_issues_feature_requests: string;
-    aside_discord_alerts: string;
 
     releases_title: string;
+    releases_none: string;
     releases_description: string;
     releases_description_mobile: string;
     releases_mainline: string;
-    releases_devbuild: string;
-    releases_devbuilds: string;
     releases_install: string;
     releases_reinstall: string;
     releases_install_tooltip: string;
@@ -159,10 +152,9 @@ export type MessageSchema = {
     releases_changelog: string;
     releases_current_version: string;
     releases_view_release_page: string;
-
-    footer_mainline: string;
-    footer_devbuilds: string;
     footer_navigation: string;
+    footer_releases: string;
+    footer_unofficial: string;
     footer_community: string;
     footer_last_update: string;
 
@@ -325,20 +317,9 @@ export type MessageSchema = {
     updater_no_logs_yet: string;
     updater_clear_logs: string;
     updater_flash_logs_appear: string;
-    updater_channel_label: string;
     updater_version_dropdown_label: string;
-    updater_branch_dropdown_label: string;
-    updater_select_channel: string;
     updater_select_version: string;
-    updater_select_branch: string;
-    updater_mainline_label: string;
-    updater_mainline_description: string;
-    updater_development_label: string;
-    updater_development_description: string;
-    updater_branch_label: string;
-    updater_branch_description: string;
-    updater_branch_warning: string;
-    updater_branch_matching_warning: string;
+    updater_no_releases: string;
     updater_unknown_date: string;
     updater_flash_button: string;
     updater_logger_initialized: string;
@@ -354,7 +335,6 @@ export type MessageSchema = {
     updater_flash_select_release_or_file: string;
     updater_unavailable: string;
     updater_go_to_release: string;
-    updater_go_to_branch: string;
     updater_upload_file: string;
     updater_select_release: string;
     updater_flashing_unavailable: string;

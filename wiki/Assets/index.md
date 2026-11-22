@@ -13,10 +13,10 @@ head:
         content: "Guide on what asset packs are and how to install or create them"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Assets"
+        content: "https://momentum-dx.project516.dev/wiki/Assets"
     - - meta
       - name: "twitter:title"
         content: "Asset Packs | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Guide on what asset packs are and how to install or create them"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 prev:
     text: Installation
     link: /wiki/Installation

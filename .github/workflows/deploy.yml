@@ -1,0 +1,71 @@
+name: Deploy
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  FIRMWARE_REPO: momentum-dx/Momentum-Firmware-dx
+  SITE_URL: https://momentum-dx.project516.dev
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    steps:
+      - name: Compare the latest release with the deployed site
+        id: compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          latest="$(gh api "repos/$FIRMWARE_REPO/releases?per_page=100" \
+            --jq '[.[] | select(.draft == false and .prerelease == false and (.tag_name | startswith("dx-")))] | sort_by(.published_at) | reverse | .[0].tag_name // ""')"
+          deployed="$(curl -fsS "$SITE_URL/firmware/latest.txt" 2>/dev/null | tr -d '[:space:]' || true)"
+          echo "latest release: '$latest', deployed: '$deployed'"
+          if [ "$latest" = "$deployed" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .vitepress/dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v5

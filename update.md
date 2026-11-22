@@ -14,10 +14,10 @@ head:
         content: "Update your Flipper Zero to the latest Momentum Firmware"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/update"
+        content: "https://momentum-dx.project516.dev/update"
     - - meta
       - name: "twitter:title"
         content: "Web Updater | Momentum Firmware"
@@ -26,7 +26,7 @@ head:
         content: "Update your Flipper Zero to the latest Momentum Firmware"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 <UpdaterPage />

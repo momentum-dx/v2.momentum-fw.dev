@@ -2,7 +2,7 @@
 import { useScroll, useWindowSize } from "@vueuse/core";
 import { computed, nextTick, ref } from "vue";
 import type { ReleaseItem } from "../../../_data/releases";
-import { devbuildReleases, mainlineReleases } from "../../../_data/releases";
+import { mainlineReleases } from "../../../_data/releases";
 import { formatDate, formatTimestamp } from "../date";
 import { scrollToTop } from "../util";
 
@@ -47,7 +47,6 @@ const renderReleaseSection = (title: string, releases: ReleaseItem[]) => {
 
 const releaseSections = computed(() => [
     renderReleaseSection(tr("releases_mainline"), mainlineReleases),
-    renderReleaseSection(tr("releases_devbuilds"), devbuildReleases),
 ]);
 
 const toggleDropdown = async () => {
@@ -79,10 +78,6 @@ const selectRelease = (release: ReleaseItem) => {
     isDropdownOpen.value = false;
     emit("toggleContentFade", false);
 };
-
-const isMainline = computed(() => {
-    return props.selectedRelease?.version.includes("mntm");
-});
 
 const isSelected = (release: ReleaseItem) => {
     return props.selectedRelease?.version === release.version;
@@ -117,12 +112,10 @@ const handleHeaderClick = () => {
                         :aria-label="tr('releases_current_version')"
                     >
                         <v-icon
-                            :name="isMainline ? 'oi-tag' : 'oi-git-commit'"
-                            :aria-label="
-                                isMainline ? tr('releases_mainline') : tr('releases_devbuild')
-                            "
-                            :title="isMainline ? tr('releases_mainline') : tr('releases_devbuild')"
-                            :scale="isMainline ? 0.85 : 1"
+                            name="oi-tag"
+                            :aria-label="tr('releases_mainline')"
+                            :title="tr('releases_mainline')"
+                            :scale="0.85"
                         />
                     </div>
                     <span

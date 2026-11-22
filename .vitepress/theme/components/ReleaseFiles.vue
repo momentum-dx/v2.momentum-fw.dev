@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { computed, watch } from "vue";
-import type {
-    DevbuildFile,
-    FirmwareFile,
-    MainlineFile,
-    ReleaseItem,
-} from "../../../_data/releases";
+import type { ReleaseFile, ReleaseItem } from "../../../_data/releases";
+import { SITE_HOST } from "../../site";
 import { useI18n, useMounted } from "../composables";
 import {
     flipperAppStoreUrl,
+    getFirmwareDownloadUrl,
     flipperPlayStoreUrl,
     getMobilePlatform,
     supportsSerialPort,
@@ -66,11 +63,8 @@ const installHref = computed(() => {
 
 /** Query string understood by both apps for `lab.flipper.net` web update links. */
 const webUpdateQuery = (release: ReleaseItem): string => {
-    const tgzDir = release.commit ? "dev" : release.version;
-    const tgzUrl = `https://up.momentum-fw.dev/builds/firmware/${tgzDir}/${findUpdateTgz(release.files as DevbuildFile[])}`;
-    const channel = release.commit ? "dev" : "release";
-    const version = (release.commit ? "mntm-dev-" : "") + release.version;
-    return `url=${tgzUrl}&channel=${channel}-cfw&version=${version}`;
+    const tgzUrl = getFirmwareDownloadUrl(release);
+    return `url=${tgzUrl}&channel=release-cfw&version=${release.version}`;
 };
 
 const flipperLabUrl = (release: ReleaseItem): string =>
@@ -105,13 +99,6 @@ const onInstallClick = (
     }, 1500);
 };
 
-const findUpdateTgz = (files: DevbuildFile[]): string | undefined => {
-    const updateTgz = files.find(
-        (file) => file.filename.startsWith("flipper-z-f7-update") && file.filename.endsWith(".tgz"),
-    );
-    return updateTgz?.filename;
-};
-
 const isDevelopmentFile = (filename: string): boolean => {
     const devFiles = [
         { type: "core2_firmware", ext: ".tgz" },
@@ -127,9 +114,7 @@ const isDevelopmentFile = (filename: string): boolean => {
 const categorizedFiles = computed(() => {
     if (!props.selectedRelease?.files) return { regular: [], development: [] };
 
-    const getFilename = (file: FirmwareFile | DevbuildFile | MainlineFile) => {
-        return "filename" in file ? file.filename : file.url.split("/").pop() || "";
-    };
+    const getFilename = (file: ReleaseFile) => file.filename;
 
     const getFilePriority = (filename: string): number => {
         const f = filename.toLowerCase();
@@ -256,7 +241,7 @@ watch(
 
                         <div class="flex-1 min-w-80">
                             <div class="mb-3">
-                                <FileGrid :files="categorizedFiles.development as any" />
+                                <FileGrid :files="categorizedFiles.development" />
                             </div>
                         </div>
                     </div>
@@ -288,7 +273,7 @@ watch(
                                 v-html="
                                     tr('releases_install_tooltip', {
                                         url: getLocalizedPath(`/wiki/Installation`),
-                                        text: `momentum-fw.dev${getLocalizedPath(`/wiki/Installation`)}`,
+                                        text: `${SITE_HOST}${getLocalizedPath(`/wiki/Installation`)}`,
                                     })
                                 "
                             ></span>

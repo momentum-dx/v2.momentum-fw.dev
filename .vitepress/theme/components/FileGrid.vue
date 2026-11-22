@@ -1,31 +1,20 @@
 <script setup lang="ts">
 import { useWindowSize } from "@vueuse/core";
 import { ref } from "vue";
-import type { DevbuildFile, FirmwareFile, MainlineFile } from "../../../_data/releases";
+import type { ReleaseFile } from "../../../_data/releases";
 import { useThemeSwitcher } from "../composables";
 import { downloadFile } from "../util";
 
-type File = FirmwareFile | DevbuildFile | MainlineFile;
-
 interface Props {
-    files: File[];
+    files: ReleaseFile[];
 }
 
 defineProps<Props>();
 const { width } = useWindowSize();
 const { ifCurrentTheme } = useThemeSwitcher();
 
-const getFileKey = (file: File) => {
-    return "url" in file ? file.url : "filename" in file ? file.filename : "";
-};
-
-const getFileName = (file: File) => {
-    return "filename" in file
-        ? file.filename
-        : "url" in file
-          ? file.url.split("/").pop() || ""
-          : "";
-};
+const getFileKey = (file: ReleaseFile) => file.url;
+const getFileName = (file: ReleaseFile) => file.filename;
 
 const buttonStates = ref<
     Record<
@@ -38,7 +27,7 @@ const buttonStates = ref<
     >
 >({});
 
-const handleMouse = (file: File, action: "down" | "up" | "leave") => {
+const handleMouse = (file: ReleaseFile, action: "down" | "up" | "leave") => {
     const key = getFileKey(file);
     if (!buttonStates.value[key]) {
         buttonStates.value[key] = { isPressed: false, isSuccess: false };
@@ -51,13 +40,7 @@ const handleMouse = (file: File, action: "down" | "up" | "leave") => {
     }
 };
 
-const getDownloadUrl = (file: File) => {
-    return "url" in file
-        ? file.url
-        : `https://up.momentum-fw.dev/builds/firmware/dev/${file.filename}`;
-};
-
-const handleDownload = (file: File) => {
+const handleDownload = (file: ReleaseFile) => {
     const key = getFileKey(file);
     if (!buttonStates.value[key]) {
         buttonStates.value[key] = { isPressed: false, isSuccess: false };
@@ -75,15 +58,15 @@ const handleDownload = (file: File) => {
         }
     }, 3000);
 
-    downloadFile(getDownloadUrl(file));
+    downloadFile(file.url);
 };
 
-const getButtonIcon = (file: File) => {
+const getButtonIcon = (file: ReleaseFile) => {
     const key = getFileKey(file);
     return buttonStates.value[key]?.isSuccess ? "bi-check2" : "bi-file-earmark-zip";
 };
 
-const getButtonScale = (file: File) => {
+const getButtonScale = (file: ReleaseFile) => {
     const key = getFileKey(file);
     return buttonStates.value[key]?.isPressed ? "scale-[0.99]" : "scale-100";
 };
@@ -143,16 +126,7 @@ const getButtonScale = (file: File) => {
                         ifCurrentTheme(['skyline']) && 'group-hover:text-vp-neutral',
                     ]"
                 >
-                    {{
-                        [
-                            // "sha256" in file ? file.sha256 : "",
-                            "type" in file ? file.type : "",
-                            "size" in file ? file.size : "",
-                            "target" in file ? file.target : "",
-                        ]
-                            .filter(Boolean)
-                            .join(" • ")
-                    }}
+                    {{ file.size }}
                 </div>
             </div>
         </div>

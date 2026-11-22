@@ -13,10 +13,10 @@ head:
         content: "Settings for the Flipper Zero's name and shell color"
     - - meta
       - property: "og:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
     - - meta
       - property: "og:url"
-        content: "https://momentum-fw.dev/wiki/Misc/Spoofing"
+        content: "https://momentum-dx.project516.dev/wiki/Misc/Spoofing"
     - - meta
       - name: "twitter:title"
         content: "Spoofing | Momentum Firmware"
@@ -25,7 +25,7 @@ head:
         content: "Settings for the Flipper Zero's name and shell color"
     - - meta
       - name: "twitter:image"
-        content: "https://momentum-fw.dev/og.png"
+        content: "https://momentum-dx.project516.dev/og.png"
 ---
 
 # Spoofing

@@ -4,20 +4,17 @@ import { defineConfig } from "vitepress";
 /* LOCALE_IMPORTS_START */
 import { rootConfig, rootSearchLocale } from "./config/en";
 /* LOCALE_IMPORTS_END */
-import { mainlineReleases } from "../_data/releases";
+import { FIRMWARE_REPO, SITE_DESCRIPTION, SITE_HOST, SITE_NAME, SITE_URL } from "./site";
 
 export default defineConfig({
     async transformPageData(pageData) {
         if (pageData.relativePath.startsWith("releases/") && pageData.params?.version) {
             const version = pageData.params.version;
-            const isMainline = mainlineReleases.some((r) => r.version === version);
-            const displayVersion = version.toUpperCase();
-
-            pageData.title = `${displayVersion}`;
-            pageData.frontmatter.title = `${displayVersion} | Momentum Releases`;
-            pageData.frontmatter.description = `Changelog and downloads for the ${displayVersion} ${isMainline ? "release" : "devbuild"}`;
-            pageData.frontmatter.ogImage = `/og/${version}.png`;
-            pageData.frontmatter.ogUrl = `https://momentum-fw.dev/releases/${version}`;
+            pageData.title = version;
+            pageData.frontmatter.title = `${version} | ${SITE_NAME} Releases`;
+            pageData.frontmatter.description = `Changelog and downloads for ${SITE_NAME} ${version}`;
+            pageData.frontmatter.ogImage = "/og.png";
+            pageData.frontmatter.ogUrl = `${SITE_URL}/releases/${version}`;
         }
 
         return pageData;
@@ -28,25 +25,23 @@ export default defineConfig({
 
         if (pageData.relativePath.startsWith("releases/") && pageData.params?.version) {
             const version = pageData.params.version;
-            const isMainline = mainlineReleases.some((r) => r.version === version);
-            const displayVersion = version.toUpperCase();
-            const description = `Changelog and downloads for the ${displayVersion} ${isMainline ? "release" : "devbuild"}`;
-            const ogImage = isMainline ? `/og/${version}.png` : `/og.png`; // TODO: Use either `/og/releases.png` or `/og/devbuild.png`.
-            const title = `${displayVersion} | ${isMainline ? "Mainline Release" : "Dev build"}`;
+            const description = `Changelog and downloads for ${SITE_NAME} ${version}`;
+            const ogImage = "/og.png";
+            const title = `${version} | Release`;
 
             head.push(
                 ["meta", { name: "title", content: title }],
                 ["meta", { name: "description", content: description }],
                 ["meta", { property: "og:title", content: title }],
                 ["meta", { property: "og:description", content: description }],
-                ["meta", { property: "og:image", content: `https://momentum-fw.dev${ogImage}` }],
+                ["meta", { property: "og:image", content: `${SITE_URL}${ogImage}` }],
                 [
                     "meta",
-                    { property: "og:url", content: `https://momentum-fw.dev/releases/${version}` },
+                    { property: "og:url", content: `${SITE_URL}/releases/${version}` },
                 ],
                 ["meta", { name: "twitter:title", content: title }],
                 ["meta", { name: "twitter:description", content: description }],
-                ["meta", { name: "twitter:image", content: `https://momentum-fw.dev${ogImage}` }],
+                ["meta", { name: "twitter:image", content: `${SITE_URL}${ogImage}` }],
             );
         } else {
             const frontmatter = pageData.frontmatter || {};
@@ -67,39 +62,38 @@ export default defineConfig({
             if (!hasOgImage) {
                 head.push([
                     "meta",
-                    { property: "og:image", content: "https://momentum-fw.dev/og.png" },
+                    { property: "og:image", content: `${SITE_URL}/og.png` },
                 ]);
             }
 
             if (!hasTwitterImage) {
                 head.push([
                     "meta",
-                    { name: "twitter:image", content: "https://momentum-fw.dev/og.png" },
+                    { name: "twitter:image", content: `${SITE_URL}/og.png` },
                 ]);
             }
 
             const title = frontmatter.title || "";
-            const description =
-                frontmatter.description ||
-                "Feature-rich, stable and customizable firmware for Flipper Zero";
+            const description = frontmatter.description || SITE_DESCRIPTION;
+            const pageTitle = title && title !== SITE_NAME ? `${title} | ${SITE_NAME}` : SITE_NAME;
 
             head.push(
                 [
                     "meta",
                     {
                         property: "og:title",
-                        content: `${title}${title ? " | " : ""}Momentum Firmware`,
+                        content: pageTitle,
                     },
                 ],
                 ["meta", { property: "og:description", content: description }],
                 ["meta", { property: "og:type", content: "website" }],
-                ["meta", { property: "og:site_name", content: "momentum-fw.dev" }],
+                ["meta", { property: "og:site_name", content: SITE_HOST }],
                 ["meta", { name: "twitter:card", content: "summary_large_image" }],
                 [
                     "meta",
                     {
                         name: "twitter:title",
-                        content: `${title}${title ? " | " : ""}Momentum Firmware`,
+                        content: pageTitle,
                     },
                 ],
                 ["meta", { name: "twitter:description", content: description }],
@@ -121,8 +115,7 @@ export default defineConfig({
         /* LOCALE_CONFIGS_END */
     } as Parameters<typeof defineConfig>[0]["locales"],
     head: [
-        ["link", { rel: "icon", href: "/logos/logo_round.png" }],
-        ["link", { rel: "icon", href: "/logos/black.ico" }],
+        ["link", { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }],
         [
             "meta",
             { name: "theme-color", media: "(prefers-color-scheme: light)", content: "#ffffff" },
@@ -137,55 +130,53 @@ export default defineConfig({
             {
                 name: "keywords",
                 content:
-                    "Momentum, Momentum Firmware, MNTM, Flipper, Flipper Zero, Firmware, Fork, Custom, Customization, Updater, Asset Packs, Github",
+                    "Momentum-dx, Momentum, Momentum Firmware, Flipper, Flipper Zero, Firmware, Fork, Custom, Updater, Asset Packs, Github",
             },
         ],
         ["meta", { name: "license", content: "GPL-3.0" }],
-        ["meta", { property: "og:title", content: "Momentum Firmware" }],
+        ["meta", { property: "og:title", content: SITE_NAME }],
         [
             "meta",
             {
                 property: "og:description",
-                content: "Feature-rich, stable and customizable firmware for Flipper Zero",
+                content: SITE_DESCRIPTION,
             },
         ],
-        ["meta", { name: "author", content: "Next-Flip" }],
-        ["meta", { property: "og:author", content: "Next-Flip" }],
+        ["meta", { name: "author", content: "Project516" }],
         [
             "meta",
             {
                 property: "og:image",
-                content: "https://momentum-fw.dev/og.png",
+                content: `${SITE_URL}/og.png`,
             },
         ],
-        ["meta", { property: "og:url", content: "https://momentum-fw.dev/" }],
+        ["meta", { property: "og:url", content: `${SITE_URL}/` }],
         ["meta", { property: "og:type", content: "website" }],
-        ["meta", { property: "og:site_name", content: "momentum-fw.dev" }],
+        ["meta", { property: "og:site_name", content: SITE_HOST }],
         ["meta", { property: "og:locale", content: "en_US" }],
-        ["meta", { name: "twitter:creator", content: "@FlipperMomentum" }],
         ["meta", { name: "twitter:card", content: "summary_large_image" }],
-        ["meta", { name: "twitter:title", content: "Momentum Firmware" }],
+        ["meta", { name: "twitter:title", content: SITE_NAME }],
         [
             "meta",
             {
                 name: "twitter:description",
-                content: "Feature-rich, stable and customizable firmware for Flipper Zero",
+                content: SITE_DESCRIPTION,
             },
         ],
         [
             "meta",
             {
                 name: "twitter:image",
-                content: "https://momentum-fw.dev/og.png",
+                content: `${SITE_URL}/og.png`,
             },
         ],
-        ["meta", { name: "twitter:alt", content: "Momentum Firmware" }],
+        ["meta", { name: "twitter:alt", content: SITE_NAME }],
         ["meta", { name: "viewport", content: "width=device-width, initial-scale=1.0" }],
         ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
         ["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
     ],
     sitemap: {
-        hostname: "https://momentum-fw.dev",
+        hostname: SITE_URL,
     },
     vite: {
         define: {
@@ -261,12 +252,9 @@ export default defineConfig({
     cleanUrls: true,
     lastUpdated: true,
     themeConfig: {
-        logo: "/logos/logo_round.png",
         outline: "deep",
         socialLinks: [
-            { icon: "x", link: "https://x.com/FlipperMomentum" },
-            { icon: "discord", link: "https://discord.gg/momentum" },
-            { icon: "github", link: "https://github.com/Next-Flip/Momentum-Firmware" },
+            { icon: "github", link: `https://github.com/${FIRMWARE_REPO}` },
         ],
         search: {
             provider: "local",

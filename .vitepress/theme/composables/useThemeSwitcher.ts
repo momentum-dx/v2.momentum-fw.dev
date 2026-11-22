@@ -1,20 +1,10 @@
 import { useStorage } from "@vueuse/core";
-import { useData } from "vitepress";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { LOGO_COLORS, LogoColor, STORAGE_KEYS } from "../types";
 
-export function useThemeSwitcher(basePath: string = "/logos/") {
+export function useThemeSwitcher() {
     const logoColors = LOGO_COLORS;
     const currentIndex = ref(0);
-    const { isDark } = useData();
-
-    const currentLogo = computed(() => {
-        const currentColor = logoColors[currentIndex.value];
-
-        return `${basePath}${
-            currentColor === "white" ? (isDark.value ? "white" : "black") : currentColor
-        }_round.png`;
-    });
 
     const currentTheme = useStorage(STORAGE_KEYS.THEME, logoColors[0], undefined, {
         initOnMounted: true,
@@ -112,7 +102,6 @@ export function useThemeSwitcher(basePath: string = "/logos/") {
 
     return {
         currentIndex,
-        currentLogo,
         currentTheme,
         currentThemeClass,
         isLocked,

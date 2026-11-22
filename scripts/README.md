@@ -1,6 +1,6 @@
 # Scripts
 
-This directory contains build automation scripts for the Momentum Firmware website. The main entry point is [`prebuild.ts`](./prebuild.ts), which orchestrates the entire build preparation process. The prebuild runs automatically before development and production builds to fetch external data and generate configuration files (it does not need to be run manually).
+This directory contains build automation scripts for the Momentum-dx website. The main entry point is [`prebuild.ts`](./prebuild.ts), which orchestrates the entire build preparation process. The prebuild runs automatically before development and production builds to fetch external data and generate configuration files (it does not need to be run manually).
 
 [`../package.json`](../package.json)
 
@@ -20,6 +20,8 @@ This directory contains build automation scripts for the Momentum Firmware websi
 ## Environment Variables
 
 - `SKIP_FETCH=true` - Skip external data fetching (e.g. `bun run dev:skip`)
+- `GITHUB_TOKEN` - Token for the GitHub API calls (optional)
+- `RELEASES_FIXTURE` - Path to a JSON file in the GitHub releases API format, used instead of the API
 
 ## Pre-build Process
 
@@ -28,9 +30,10 @@ This directory contains build automation scripts for the Momentum Firmware websi
    - Generates [`_data/packs.ts`](../_data/packs.ts) with asset pack metadata
 
 2. **Fetch Releases** ([`releases.ts`](./releases.ts))
-   - Scrapes firmware builds from `https://up.momentum-fw.dev/builds/firmware/`
-   - Downloads changelogs from GitHub for each release
-   - Generates [`_data/releases.ts`](../_data/releases.ts) with mainline and devbuild data
+   - Reads the `dx-*` releases of `momentum-dx/Momentum-Firmware-dx` from the GitHub API (newest 5)
+   - Downloads their assets into `public/builds/firmware/<tag>/`
+   - Writes `public/firmware/directory.json` and `public/firmware/latest.txt`
+   - Generates [`_data/releases.ts`](../_data/releases.ts) with the release data
 
 3. **Generate VitePress Configs** ([`config.ts`](./config.ts))
    - Creates locale-specific VitePress configuration files in `.vitepress/config/`

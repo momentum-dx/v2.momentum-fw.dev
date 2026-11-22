@@ -1,15 +1,16 @@
 ---
 layout: home
-title: Momentum Firmware
-description: "Feature-rich, stable and customizable\nFirmware for Flipper Zero"
+title: Momentum-dx
+description: "Momentum-dx, a bleeding-edge fork of Momentum Firmware, for the Flipper Zero"
 
 head:
     - - meta
       - name: "description"
-        content: "Feature-rich, stable and customizable\nFirmware for Flipper Zero"
+        content: "Momentum-dx, a bleeding-edge fork of Momentum Firmware, for the Flipper Zero"
 
 hero:
-    tagline: "Feature-rich, stable and customizable\nFirmware for Flipper Zero"
+    name: "Momentum-dx"
+    tagline: "a bleeding-edge fork of Momentum Firmware"
 
 features:
     - title: Asset Packs
@@ -38,12 +39,19 @@ features:
           src: "/svg/js.svg"
 ---
 
+<div class="mntm-h2">About Momentum-dx</div>
+
+Momentum-dx is Momentum Firmware with OFW `dev` and Unleashed merged in, plus updated bundled apps. A release is a tested commit on the `dev` branch, tagged `dx-YYYY.MM.DD`. The features below come from Momentum.
+
+Momentum-dx is an unofficial fork. It is not affiliated with Next-Flip or the Momentum team. It is built on [Momentum](https://github.com/Next-Flip/Momentum-Firmware), the [official Flipper firmware](https://github.com/flipperdevices/flipperzero-firmware) and [Unleashed](https://github.com/DarkFlippers/unleashed-firmware).
+
+
 <div class="mntm-h2">Compare to other Firmware</div>
 
 <div class="full-width-table">
 
 <!-- prettier-ignore-start -->
-|Feature|[OFW](https://github.com/flipperdevices/flipperzero-firmware)|[RogueMaster](https://github.com/RogueMaster/flipperzero-firmware-wPlugins)|[Unleashed](https://github.com/DarkFlippers/unleashed-firmware)|Momentum|
+|Feature|[OFW](https://github.com/flipperdevices/flipperzero-firmware)|[RogueMaster](https://github.com/RogueMaster/flipperzero-firmware-wPlugins)|[Unleashed](https://github.com/DarkFlippers/unleashed-firmware)|Momentum-dx|
 |-|:-:|:-:|:-:|:-:|
 |Stable Updates|<span class="check">&#10003;</span>|&#10007;|<span class="check">&#10003;</span>|<span class="check-last">&#10003;</span>|
 |(Some) Rolling Code Support|&#10033;<sup><a href="#fn1" id="ref1">1</a></sup>|<span class="check">&#10003;</span>|<span class="check">&#10003;</span>|<span class="check-last">&#10003;</span>|
@@ -64,7 +72,6 @@ features:
 |File Search|&#10007;|&#10007;|&#10007;|<span class="check-last">&#10003;</span>|
 |Disk Image Management|&#10007;|<span class="check">&#10003;</span>|&#10007;|<span class="check-last">&#10003;</span>|
 |Improved Error Messages (Showing source path)|&#10007;|&#10007;|&#10007;|<span class="check-last">&#10003;</span>|
-|Preinstalled External Apps (As of 04.2025)|3|421|226 (with [e] pack)|183|
 <!-- prettier-ignore-end -->
 
 </div>
