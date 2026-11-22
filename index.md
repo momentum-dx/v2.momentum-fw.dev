@@ -10,6 +10,9 @@ head:
 
 hero:
     name: "Momentum-dx"
+    image:
+        src: /logos/mdx_wordmark.png
+        alt: Momentum-dx logo
     tagline: "a bleeding-edge fork of Momentum Firmware"
 
 features:

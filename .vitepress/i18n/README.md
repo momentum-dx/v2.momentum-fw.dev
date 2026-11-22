@@ -178,7 +178,7 @@ This ensures that:
 
 When contributing translations:
 
-1. Fork the repository [here](https://github.com/Next-Flip/v2.momentum-fw.dev/fork)
+1. Fork the repository [here](https://github.com/momentum-dx/website/fork)
 2. Create a new branch for your translation
 3. Follow the steps above to add your language
 4. Submit a pull request with your changes

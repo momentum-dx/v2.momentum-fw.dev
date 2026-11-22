@@ -5,7 +5,7 @@ export const SITE_URL = "https://momentum-dx.project516.dev";
 export const SITE_HOST = "momentum-dx.project516.dev";
 
 export const FIRMWARE_REPO = "momentum-dx/Momentum-Firmware-dx";
-export const WEBSITE_REPO = "momentum-dx/v2.momentum-fw.dev";
+export const WEBSITE_REPO = "momentum-dx/website";
 
 export const MOMENTUM_URL = "https://github.com/Next-Flip/Momentum-Firmware";
 export const OFW_URL = "https://github.com/flipperdevices/flipperzero-firmware";

@@ -34,7 +34,7 @@ next:
 <!-- TODO: Commented out because we don't need the translations for now -->
 <!-- <div class="mntm custom-block"> -->
 
-<!-- You can find this wiki in different languages below. If you want to help us out with localization: [Next-Flip/v2.momentum-fw.dev](https://github.com/Next-Flip/v2.momentum-fw.dev/tree/dev/.vitepress/i18n). -->
+<!-- You can find this wiki in different languages below. If you want to help us out with localization: [momentum-dx/website](https://github.com/momentum-dx/website/tree/dev/.vitepress/i18n). -->
 
 <!-- LOCALE_LINKS_START -->
 <!-- LOCALE_LINKS_END -->
